@@ -35,8 +35,7 @@ let urlForDate game v (date: DateTime) =
     $"https://www.nytimes.com/svc/%s{game}/{version v}/{formatDate date}.json"
 
 let getRequest url =
-    Http.RequestString url
-    |> String.filter (Char.IsAscii)
+    Http.RequestString url |> String.filter (Char.IsAscii)
 
 /// Common information that is published with each NYT game
 type PublicationInformation =
@@ -190,8 +189,7 @@ module Mini =
 
 
     let getRaw () =
-        "https://www.nytimes.com/svc/crosswords/v6/puzzle/mini.json"
-        |> getRequest
+        "https://www.nytimes.com/svc/crosswords/v6/puzzle/mini.json" |> getRequest
 
     let private decodeDirection: Decoder<Direction> =
         Decode.string
