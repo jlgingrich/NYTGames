@@ -75,4 +75,16 @@ Mini.getCurrentGame ()
     |> String.concat "\n"
     |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
 
+SpellingBee.getCurrentGame ()
+|> Result.assertOk
+|> fun game ->
+    $"\n## Spelling Bee\n\n**By:** %s{game.Info.Editor}\n\n**Solution:**\n"
+    |> toStringBuilder
+    
+    game.Answers
+    |> List.map (fun word -> $"- `%s{word.ToUpper()}`")
+    |> List.sortBy (fun w -> -w.Length)
+    |> String.concat "\n"
+    |> toStringBuilder
+
 File.write $"Reports/nytgames.%s{dateStamp}.md" (s.ToString())

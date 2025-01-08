@@ -55,12 +55,11 @@ Each supported game is defined in a module that has these methods. Of these, you
   - Historical puzzles not supported.
 - **Strands**
 - **Wordle**
+- **Spelling Bee**
+  - Historical puzzles not supported.
 
 ## Unsupported Games
 
-- **Spelling Bee**
-  - Not free.
-  - Use a :rainbow: dictionary :rainbow:.
 - **Sudoko**
   - Generates puzzles locally rather than fetching curated puzzles.
   - Use a :abacus: Sudoku solver :abacus:.

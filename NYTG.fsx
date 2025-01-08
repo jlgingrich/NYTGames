@@ -146,6 +146,43 @@ module LetterBoxed =
 
     let getCurrentGame () = getRaw () |> parse
 
+module SpellingBee =
+    type Game =
+        {
+            Info: PublicationInformation
+            CenterLetter: char
+            OuterLetters: char list
+            Answers: string list
+          }
+
+
+    let getRaw () =
+        let scriptPrefix = "window.gameData = "
+
+        HtmlDocument.Load "https://www.nytimes.com/puzzles/spelling-bee"
+        |> fun n -> n.CssSelect "script[type=text/javascript]"
+        |> List.filter (fun n -> n.DirectInnerText().StartsWith scriptPrefix)
+        |> List.exactlyOne
+        |> fun n -> n.DirectInnerText()[String.length scriptPrefix ..]
+
+
+    let private decoder: Decoder<Game> =
+        Decode.object (fun get ->
+            { Info =
+                { Id = get.Required.At ["today"; "id"] Decode.int
+                  PrintDate = get.Required.At ["today"; "printDate"] Decode.datetimeLocal
+                  Editor = get.Required.At ["today"; "editor"] Decode.string
+                  Constructors = List.empty }
+              CenterLetter = get.Required.At ["today"; "centerLetter"] Decode.char
+              OuterLetters = get.Required.At ["today"; "outerLetters"] (Decode.list Decode.char)
+              Answers = get.Required.At ["today"; "answers"] (Decode.list Decode.string )})
+
+    let parse = Decode.fromString decoder
+
+    let getGame date = failwith "Not implemented"
+
+    let getCurrentGame () = getRaw () |> parse
+
 module Wordle =
     type Game =
         { Info: PublicationInformation
