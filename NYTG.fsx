@@ -111,6 +111,40 @@ module Connections =
 
     let getCurrentGame () = DateTime.Now |> getGame
 
+module ConnectionsSportsEdition =
+    type Category = { Title: string; Cards: string list }
+
+    type Game =
+        { Info: PublicationInformation
+          Categories: Category list }
+
+    let getRaw date =
+        $"https://www.nytimes.com/games-assets/sports-connections/{formatDate date}.json"
+        |> getRequest
+
+    let private decodeCategory: Decoder<Category> =
+        Decode.object (fun get ->
+            { Title = get.Required.Field "title" Decode.string
+              Cards =
+                get.Required.Field
+                    "cards"
+                    (Decode.list (Decode.object (fun get -> get.Required.Field "content" Decode.string))) })
+
+    let private decoder: Decoder<Game> =
+        Decode.object (fun get ->
+            { Info =
+                { Id = get.Required.Field "id" Decode.int
+                  PrintDate = get.Required.Field "printDate" Decode.datetimeLocal
+                  Editor = get.Required.Field "editor" Decode.string
+                  Constructors = List.empty }
+              Categories = get.Required.Field "categories" (Decode.list decodeCategory) })
+
+    let parse = Decode.fromString decoder
+
+    let getGame date = getRaw date |> parse
+
+    let getCurrentGame () = DateTime.Now |> getGame
+
 module LetterBoxed =
     type Game =
         { Info: PublicationInformation

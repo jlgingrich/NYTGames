@@ -36,6 +36,17 @@ Connections.getCurrentGame ()
         $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
         c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
 
+ConnectionsSportsEdition.getCurrentGame ()
+|> Result.assertOk
+|> fun game ->
+    $"\n## Connections: Sports Edition\n\n**By:** %s{game.Info.Editor}\n\n**Categories:**\n"
+    |> toStringBuilder
+
+    game.Categories
+    |> List.iteri (fun i c ->
+        $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
+        c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
+
 LetterBoxed.getCurrentGame ()
 |> Result.assertOk
 |> fun game ->

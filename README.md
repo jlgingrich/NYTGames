@@ -49,6 +49,7 @@ Each supported game is defined in a module that has these methods. Of these, you
 ## Supported Games
 
 - **Connections**
+- **Connections: Sports Edition**
 - **Letter Boxed**
   - Historical puzzles not supported.
 - **The Mini**
