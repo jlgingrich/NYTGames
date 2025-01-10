@@ -6,11 +6,11 @@ open Thoth.Json.Net
 
 /// Extensions to <code>Thoth.Json.Net.Decode</code>.
 module Decode =
-    let singleton (decoder: Decoder<'value>) : Decoder<'value> =
+    let exactlyOne (decoder: Decoder<'value>) : Decoder<'value> =
         Decode.list decoder
         |> Decode.andThen (function
             | [ item ] -> Decode.succeed item
-            | items -> Decode.fail $"Expected singleton, but got {List.length items} values")
+            | items -> Decode.fail $"Expected exactly one list entry, but got {List.length items} entries")
 
 /// Simple way to dump a custom type into JSON
 module Encode =
@@ -36,6 +36,8 @@ module Helpers =
 
     let getRequest url =
         Http.RequestString url |> String.filter (Char.IsAscii)
+
+    let failNotImplemented () = failwith "Not implemented"
 
 /// Common information that is published with each NYT game
 type PublicationInformation =
@@ -64,7 +66,7 @@ module Strands =
                 { Id = get.Required.Field "id" Decode.int
                   PrintDate = get.Required.Field "printDate" Decode.datetimeLocal
                   Editor = get.Required.Field "editor" Decode.string
-                  Constructors = get.Required.Field "constructors" Decode.string |> List.singleton }
+                  Constructors = get.Required.Field "constructors" Decode.string |> List.exactlyOne }
               Clue = get.Required.Field "clue" Decode.string
               Spangram = get.Required.Field "spangram" Decode.string
               ThemeWords = get.Required.Field "themeWords" (Decode.list Decode.string)
@@ -176,18 +178,16 @@ module LetterBoxed =
 
     let parse = Decode.fromString decoder
 
-    let getGame date = failwith "Not implemented"
+    let getGame date = Helpers.failNotImplemented ()
 
     let getCurrentGame () = getRaw () |> parse
 
 module SpellingBee =
     type Game =
-        {
-            Info: PublicationInformation
-            CenterLetter: char
-            OuterLetters: char list
-            Answers: string list
-          }
+        { Info: PublicationInformation
+          CenterLetter: char
+          OuterLetters: char list
+          Answers: string list }
 
 
     let getRaw () =
@@ -203,17 +203,17 @@ module SpellingBee =
     let private decoder: Decoder<Game> =
         Decode.object (fun get ->
             { Info =
-                { Id = get.Required.At ["today"; "id"] Decode.int
-                  PrintDate = get.Required.At ["today"; "printDate"] Decode.datetimeLocal
-                  Editor = get.Required.At ["today"; "editor"] Decode.string
+                { Id = get.Required.At [ "today"; "id" ] Decode.int
+                  PrintDate = get.Required.At [ "today"; "printDate" ] Decode.datetimeLocal
+                  Editor = get.Required.At [ "today"; "editor" ] Decode.string
                   Constructors = List.empty }
-              CenterLetter = get.Required.At ["today"; "centerLetter"] Decode.char
-              OuterLetters = get.Required.At ["today"; "outerLetters"] (Decode.list Decode.char)
-              Answers = get.Required.At ["today"; "answers"] (Decode.list Decode.string )})
+              CenterLetter = get.Required.At [ "today"; "centerLetter" ] Decode.char
+              OuterLetters = get.Required.At [ "today"; "outerLetters" ] (Decode.list Decode.char)
+              Answers = get.Required.At [ "today"; "answers" ] (Decode.list Decode.string) })
 
     let parse = Decode.fromString decoder
 
-    let getGame date = failwith "Not implemented"
+    let getGame date = Helpers.failNotImplemented ()
 
     let getCurrentGame () = getRaw () |> parse
 
@@ -260,7 +260,8 @@ module Mini =
 
 
     let getRaw () =
-        "https://www.nytimes.com/svc/crosswords/v6/puzzle/mini.json" |> Helpers.getRequest
+        "https://www.nytimes.com/svc/crosswords/v6/puzzle/mini.json"
+        |> Helpers.getRequest
 
     let private decodeDirection: Decoder<Direction> =
         Decode.string
@@ -276,7 +277,7 @@ module Mini =
               Hint =
                 get.Required.Field
                     "text"
-                    (Decode.singleton (Decode.object (fun get -> get.Required.Field "plain" Decode.string))) })
+                    (Decode.exactlyOne (Decode.object (fun get -> get.Required.Field "plain" Decode.string))) })
 
     let private decodeCell: Decoder<char option> =
         Decode.object (fun get -> get.Optional.Field "answer" Decode.string)
@@ -292,25 +293,29 @@ module Mini =
               Solution =
                 get.Required.Field
                     "body"
-                    (Decode.singleton (Decode.object (fun get -> get.Required.Field "cells" (Decode.array decodeCell)))
+                    (Decode.exactlyOne (
+                        Decode.object (fun get -> get.Required.Field "cells" (Decode.array decodeCell))
+                     )
                      |> Decode.map (Array.chunkBySize 5))
               Clues =
                 get.Required.Field
                     "body"
-                    (Decode.singleton (Decode.object (fun get -> get.Required.Field "clues" (Decode.list decodeClue))))
+                    (Decode.exactlyOne (Decode.object (fun get -> get.Required.Field "clues" (Decode.list decodeClue))))
               Height =
                 get.Required.Field
                     "body"
-                    (Decode.singleton (
+                    (Decode.exactlyOne (
                         Decode.object (fun get -> get.Required.At [ "dimensions"; "height" ] Decode.int)
                     ))
               Width =
                 get.Required.Field
                     "body"
-                    (Decode.singleton (Decode.object (fun get -> get.Required.At [ "dimensions"; "width" ] Decode.int))) })
+                    (Decode.exactlyOne (
+                        Decode.object (fun get -> get.Required.At [ "dimensions"; "width" ] Decode.int)
+                    )) })
 
     let parse = Decode.fromString decoder
 
-    let getGame date = failwith "Not implemented"
+    let getGame date = Helpers.failNotImplemented ()
 
     let getCurrentGame () = getRaw () |> parse
