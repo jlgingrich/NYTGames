@@ -1,5 +1,4 @@
-#r "nuget: FSharp.Data"
-#r "nuget: Thoth.Json.Net"
+namespace NYTGT
 
 open System
 open FSharp.Data
@@ -24,18 +23,19 @@ module Result =
         | Ok x -> x
         | Error e -> failwithf "Assertion failed: %A" e
 
-let version (i: uint) = $"v{i}"
+module Helpers =
+    let version i = $"v%d{i}"
 
-[<Literal>]
-let DateFormat = "yyyy-MM-dd"
+    [<Literal>]
+    let DateFormat = "yyyy-MM-dd"
 
-let formatDate (date: DateTime) = date.ToString(DateFormat)
+    let formatDate (date: DateTime) = date.ToString(DateFormat)
 
-let urlForDate game v (date: DateTime) =
-    $"https://www.nytimes.com/svc/%s{game}/{version v}/{formatDate date}.json"
+    let urlForDate game v (date: DateTime) =
+        $"https://www.nytimes.com/svc/%s{game}/%s{version v}/%s{formatDate date}.json"
 
-let getRequest url =
-    Http.RequestString url |> String.filter (Char.IsAscii)
+    let getRequest url =
+        Http.RequestString url |> String.filter (Char.IsAscii)
 
 /// Common information that is published with each NYT game
 type PublicationInformation =
@@ -56,7 +56,7 @@ module Strands =
 
 
     let getRaw date =
-        urlForDate "strands" 2u date |> getRequest
+        Helpers.urlForDate "strands" 2u date |> Helpers.getRequest
 
     let private decoder: Decoder<Game> =
         Decode.object (fun get ->
@@ -86,7 +86,7 @@ module Connections =
 
 
     let getRaw date =
-        urlForDate "connections" 2u date |> getRequest
+        Helpers.urlForDate "connections" 2u date |> Helpers.getRequest
 
     let private decodeCategory: Decoder<Category> =
         Decode.object (fun get ->
@@ -119,8 +119,8 @@ module ConnectionsSportsEdition =
           Categories: Category list }
 
     let getRaw date =
-        $"https://www.nytimes.com/games-assets/sports-connections/{formatDate date}.json"
-        |> getRequest
+        $"https://www.nytimes.com/games-assets/sports-connections/{Helpers.formatDate date}.json"
+        |> Helpers.getRequest
 
     let private decodeCategory: Decoder<Category> =
         Decode.object (fun get ->
@@ -224,7 +224,7 @@ module Wordle =
 
 
     let getRaw date =
-        urlForDate "wordle" 2u date |> getRequest
+        Helpers.urlForDate "wordle" 2u date |> Helpers.getRequest
 
     let private decoder: Decoder<Game> =
         Decode.object (fun get ->
@@ -260,7 +260,7 @@ module Mini =
 
 
     let getRaw () =
-        "https://www.nytimes.com/svc/crosswords/v6/puzzle/mini.json" |> getRequest
+        "https://www.nytimes.com/svc/crosswords/v6/puzzle/mini.json" |> Helpers.getRequest
 
     let private decodeDirection: Decoder<Direction> =
         Decode.string

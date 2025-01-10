@@ -1,3 +1,5 @@
+namespace NYTGT
+
 open System.IO
 
 module File =

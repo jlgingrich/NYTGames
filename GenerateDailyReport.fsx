@@ -1,9 +1,7 @@
-#load "NYTG.fsx"
-open NYTG
-
-#load "FSharp.IO.fsx"
-
-open FSharp.IO
+#r "NYTGT/bin/Debug/net8.0/NYTGT.dll"
+#r "nuget: Thoth.Json.Net"
+#r "nuget: FSharp.Data"
+open NYTGT
 
 open System
 open System.Text
@@ -14,7 +12,7 @@ let toStringBuilder (t: string) = s.Append(t) |> _.AppendLine() |> ignore
 
 let today = DateTime.Now
 
-let dateStamp = today |> formatDate
+let dateStamp = today |> Helpers.formatDate
 let dateName = today.ToString("MMMM d, yyyy")
 
 $"# Word Games - %s{dateName}" |> toStringBuilder
