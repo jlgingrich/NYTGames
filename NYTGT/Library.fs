@@ -6,7 +6,7 @@ open Thoth.Json.Net
 
 /// Extensions to <code>Thoth.Json.Net.Decode</code>.
 module Decode =
-    let exactlyOne (decoder: Decoder<'value>) : Decoder<'value> =
+    let exactlyOne (decoder: Decoder<'t>) : Decoder<'t> =
         Decode.list decoder
         |> Decode.andThen (function
             | [ item ] -> Decode.succeed item
