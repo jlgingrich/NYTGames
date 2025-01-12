@@ -62,10 +62,10 @@ Each supported game is defined in a module that has these methods. Of these, you
 ## Unsupported Games
 
 - **Sudoko**
-  - Generates puzzles locally rather than fetching curated puzzles.
+  - Doesn't have daily games and generates puzzles locally rather than fetching curated puzzles.
   - Use a :abacus: Sudoku solver :abacus:.
 - **Tiles**
   - Not word based.
-  - Try it though, its satisfying.
+  - Might make a separate project around this though; HTML parsing involved and it would be an interesting optimization challenge.
 - **The Crossword**
-  - Not free.
+  - Not free. While almost identical to The Mini API, current games are paywalled and only some archived games are available each day.
