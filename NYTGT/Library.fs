@@ -258,6 +258,7 @@ module Mini =
           Height: int
           Width: int }
 
+    let [<Literal>] BoardWidth = 5
 
     let getRaw () =
         "https://www.nytimes.com/svc/crosswords/v6/puzzle/mini.json"
@@ -296,7 +297,89 @@ module Mini =
                     (Decode.exactlyOne (
                         Decode.object (fun get -> get.Required.Field "cells" (Decode.array decodeCell))
                      )
-                     |> Decode.map (Array.chunkBySize 5))
+                     |> Decode.map (Array.chunkBySize BoardWidth))
+              Clues =
+                get.Required.Field
+                    "body"
+                    (Decode.exactlyOne (Decode.object (fun get -> get.Required.Field "clues" (Decode.list decodeClue))))
+              Height =
+                get.Required.Field
+                    "body"
+                    (Decode.exactlyOne (
+                        Decode.object (fun get -> get.Required.At [ "dimensions"; "height" ] Decode.int)
+                    ))
+              Width =
+                get.Required.Field
+                    "body"
+                    (Decode.exactlyOne (
+                        Decode.object (fun get -> get.Required.At [ "dimensions"; "width" ] Decode.int)
+                    )) })
+
+    let parse = Decode.fromString decoder
+
+    let getGame date = Helpers.failNotImplemented ()
+
+    let getCurrentGame () = getRaw () |> parse
+
+
+module Crossword =
+    type Direction =
+        | Across
+        | Down
+
+    type Clue =
+        { Direction: Direction
+          Label: int
+          Hint: string }
+
+    type Game =
+        { Info: PublicationInformation
+          Solution: char option array array
+          Clues: Clue list
+          Height: int
+          Width: int }
+
+    let [<Literal>] BoardWidth = 15
+
+    let getRaw () =
+        Http.RequestString("https://www.nytimes.com/svc/crosswords/v6/puzzle/daily.json", headers =[
+            "x-games-auth-bypass", "true"
+        ]) |> String.filter (Char.IsAscii)
+
+    let private decodeDirection: Decoder<Direction> =
+        Decode.string
+        |> Decode.andThen (function
+            | "Across" -> Decode.succeed Across
+            | "Down" -> Decode.succeed Down
+            | invalid -> Decode.fail (sprintf " `%s` is an invalid clue direction" invalid))
+
+    let private decodeClue: Decoder<Clue> =
+        Decode.object (fun get ->
+            { Direction = get.Required.Field "direction" decodeDirection
+              Label = get.Required.Field "label" Decode.int
+              Hint =
+                get.Required.Field
+                    "text"
+                    (Decode.exactlyOne (Decode.object (fun get -> get.Required.Field "plain" Decode.string))) })
+
+    let private decodeCell: Decoder<char option> =
+        Decode.object (fun get -> get.Optional.Field "answer" Decode.string)
+        |> Decode.andThen (Option.map Char.Parse >> Decode.succeed)
+
+    let private decoder: Decoder<Game> =
+        Decode.object (fun get ->
+            { Info =
+                { Id = get.Required.Field "id" Decode.int
+                  PrintDate = get.Required.Field "publicationDate" Decode.datetimeLocal
+                  Editor = get.Required.Field "editor" Decode.string
+                  Constructors = get.Required.Field "constructors" (Decode.list Decode.string) }
+              Solution =
+                get.Required.Field
+                    "body"
+                    (Decode.exactlyOne (
+                        Decode.object (fun get -> get.Required.Field "cells" (Decode.array decodeCell))
+                     )
+                     |> Decode.map (Array.chunkBySize BoardWidth))
               Clues =
                 get.Required.Field
                     "body"

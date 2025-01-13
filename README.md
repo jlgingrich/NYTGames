@@ -58,6 +58,8 @@ Each supported game is defined in a module that has these methods. Of these, you
 - **Wordle**
 - **Spelling Bee**
   - Historical puzzles not supported.
+- **The Crossword**
+  - Historical puzzles not supported.
 
 ## Unsupported Games
 
@@ -67,5 +69,3 @@ Each supported game is defined in a module that has these methods. Of these, you
 - **Tiles**
   - Not word based.
   - Might make a separate project around this though; HTML parsing involved and it would be an interesting optimization challenge.
-- **The Crossword**
-  - Not free. While almost identical to The Mini API, current games are paywalled and only some archived games are available each day.

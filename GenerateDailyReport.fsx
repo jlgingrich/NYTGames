@@ -84,6 +84,29 @@ Mini.getCurrentGame ()
     |> String.concat "\n"
     |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
 
+Crossword.getCurrentGame ()
+|> Result.assertOk
+|> fun game ->
+    $"\n## The Crossword\n\n**By:** %s{game.Info.Editor}\n" |> toStringBuilder
+
+    if not (List.isEmpty game.Info.Constructors) then
+        "**Constructed by:**\n" |> toStringBuilder
+
+        game.Info.Constructors
+        |> List.iter (fun word -> $"- %s{word}" |> toStringBuilder)
+
+    $"\n**Solution:**\n" |> toStringBuilder
+
+    game.Solution
+    |> Array.map (fun row ->
+        row
+        |> Array.map (function
+            | Some c -> Char.ToString c
+            | None -> " ")
+        |> String.concat " ")
+    |> String.concat "\n"
+    |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
+
 SpellingBee.getCurrentGame ()
 |> Result.assertOk
 |> fun game ->
