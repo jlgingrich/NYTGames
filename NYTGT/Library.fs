@@ -12,10 +12,6 @@ module Decode =
             | [ item ] -> Decode.succeed item
             | items -> Decode.fail $"Expected exactly one list entry, but got {List.length items} entries")
 
-/// Simple way to dump a custom type into JSON
-module Encode =
-    let auto = Encode.Auto.toString
-
 /// Extensions to <code>Microsoft.FSharp.Core.Result</code>.
 module Result =
     let assertOk =
@@ -36,8 +32,6 @@ module Helpers =
 
     let getRequest url =
         Http.RequestString url |> String.filter (Char.IsAscii)
-
-    let failNotImplemented () = failwith "Not implemented"
 
 /// Common information that is published with each NYT game
 type PublicationInformation =
@@ -178,8 +172,6 @@ module LetterBoxed =
 
     let parse = Decode.fromString decoder
 
-    let getGame date = Helpers.failNotImplemented ()
-
     let getCurrentGame () = getRaw () |> parse
 
 module SpellingBee =
@@ -212,8 +204,6 @@ module SpellingBee =
               Answers = get.Required.At [ "today"; "answers" ] (Decode.list Decode.string) })
 
     let parse = Decode.fromString decoder
-
-    let getGame date = Helpers.failNotImplemented ()
 
     let getCurrentGame () = getRaw () |> parse
 
@@ -317,8 +307,6 @@ module Mini =
 
     let parse = Decode.fromString decoder
 
-    let getGame date = Helpers.failNotImplemented ()
-
     let getCurrentGame () = getRaw () |> parse
 
 
@@ -398,7 +386,5 @@ module Crossword =
                     )) })
 
     let parse = Decode.fromString decoder
-
-    let getGame date = Helpers.failNotImplemented ()
 
     let getCurrentGame () = getRaw () |> parse

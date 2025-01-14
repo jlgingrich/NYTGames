@@ -39,27 +39,27 @@ Solution: 'stare'
 
 ## How to use
 
-Each supported game is defined in a module that has these methods. Of these, you probably want `getGame` (if the game supports it) or `getCurrentGame`.
+Each supported game is defined in a module that has these methods. Of these, you probably want `getCurrentGame` or, if the game supports it, `getGame`.
 
-- `getRaw`: Gets a raw unparsed JSON description of the puzzle from NYT. Usually contains unneccessary data that are ignored when parsed.
-- `parse`: Parses the raw JSON from NYT into a structured type that better represents the actual puzzle information and is easier to work with in F#.
-- `getCurrentGame`: Gets a description of the puzzle for the system's current date.
-- `getGame`: Gets a description of the puzzle on a specific date. Not all games support this currently due to technical limitations.
+- `getRaw`: Gets a raw unparsed JSON string description of the puzzle from NYT. Usually contains unneccessary data that are ignored when parsed.
+- `parse`: Parses the raw JSON string into a structured type that better represents the actual puzzle information and is easier to work with in F#.
+- `getCurrentGame`: Gets a description of the puzzle for the system's current date. All games provide this.
+- `getGame`: Gets a description of the puzzle on a specific date. Not all games currently provide this due to technical limitations.
 
 ## Supported Games
 
 - **Connections**
 - **Connections: Sports Edition**
 - **Letter Boxed**
-  - Historical puzzles not supported.
-- **The Mini**
-  - Historical puzzles not supported.
-- **Strands**
-- **Wordle**
+  - `getGame` not supported.
 - **Spelling Bee**
-  - Historical puzzles not supported.
+  - `getGame` not supported.
+- **Strands**
 - **The Crossword**
-  - Historical puzzles not supported.
+  - `getGame` not supported.
+- **The Mini**
+  - `getGame` not supported.
+- **Wordle**
 
 ## Unsupported Games
 
@@ -69,3 +69,11 @@ Each supported game is defined in a module that has these methods. Of these, you
 - **Tiles**
   - Not word-based.
   - Appears to generate puzzles on demand rather than fetch premade puzzles.
+
+## Future plans
+
+- Figure out how to access archived games for the following:
+  - Letter Boxed
+  - Spelling Bee
+  - The Crossword
+  - The Mini
