@@ -322,7 +322,7 @@ module Crossword =
 
     type Game =
         { Info: PublicationInformation
-          Solution: char option array array
+          Solution: string option array array
           Clues: Clue list
           Height: int
           Width: int }
@@ -350,9 +350,8 @@ module Crossword =
                     "text"
                     (Decode.exactlyOne (Decode.object (fun get -> get.Required.Field "plain" Decode.string))) })
 
-    let private decodeCell: Decoder<char option> =
+    let private decodeCell: Decoder<string option> =
         Decode.object (fun get -> get.Optional.Field "answer" Decode.string)
-        |> Decode.andThen (Option.map Char.Parse >> Decode.succeed)
 
     let private decoder: Decoder<Game> =
         Decode.object (fun get ->

@@ -45,6 +45,13 @@ ConnectionsSportsEdition.getCurrentGame ()
         $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
         c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
 
+Strands.getCurrentGame ()
+|> Result.assertOk
+|> fun game ->
+    $"\n## Strands\n\n**By:** %s{game.Info.Editor}\n" |> toStringBuilder
+    $"**Spangram:** `%s{game.Spangram}`\n\n**Theme words:**\n" |> toStringBuilder
+    game.ThemeWords |> List.iter (fun word -> $"- `%s{word}`" |> toStringBuilder)
+
 LetterBoxed.getCurrentGame ()
 |> Result.assertOk
 |> fun game ->
@@ -53,13 +60,6 @@ LetterBoxed.getCurrentGame ()
 
     $"\n## Letter Boxed\n\n**By:** %s{game.Info.Editor}\n\n**Solution:** %s{solution}"
     |> toStringBuilder
-
-Strands.getCurrentGame ()
-|> Result.assertOk
-|> fun game ->
-    $"\n## Strands\n\n**By:** %s{game.Info.Editor}\n" |> toStringBuilder
-    $"**Spangram:** `%s{game.Spangram}`\n\n**Theme words:**\n" |> toStringBuilder
-    game.ThemeWords |> List.iter (fun word -> $"- `%s{word}`" |> toStringBuilder)
 
 Mini.getCurrentGame ()
 |> Result.assertOk
@@ -101,7 +101,7 @@ Crossword.getCurrentGame ()
     |> Array.map (fun row ->
         row
         |> Array.map (function
-            | Some c -> Char.ToString c
+            | Some c -> c
             | None -> " ")
         |> String.concat " ")
     |> String.concat "\n"
