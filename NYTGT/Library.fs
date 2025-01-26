@@ -327,8 +327,6 @@ module Crossword =
           Height: int
           Width: int }
 
-    let [<Literal>] BoardWidth = 15
-
     let getRaw () =
         Http.RequestString("https://www.nytimes.com/svc/crosswords/v6/puzzle/daily.json", headers =[
             "x-games-auth-bypass", "true"
@@ -355,6 +353,18 @@ module Crossword =
 
     let private decoder: Decoder<Game> =
         Decode.object (fun get ->
+            let boardHeight =
+                get.Required.Field
+                    "body"
+                    (Decode.exactlyOne (
+                        Decode.object (fun get -> get.Required.At [ "dimensions"; "height" ] Decode.int)
+                    ))
+            let boardWidth =
+                get.Required.Field
+                    "body"
+                    (Decode.exactlyOne (
+                        Decode.object (fun get -> get.Required.At [ "dimensions"; "width" ] Decode.int)
+                    ))
             { Info =
                 { Id = get.Required.Field "id" Decode.int
                   PrintDate = get.Required.Field "publicationDate" Decode.datetimeLocal
@@ -366,23 +376,13 @@ module Crossword =
                     (Decode.exactlyOne (
                         Decode.object (fun get -> get.Required.Field "cells" (Decode.array decodeCell))
                      )
-                     |> Decode.map (Array.chunkBySize BoardWidth))
+                     |> Decode.map (Array.chunkBySize boardWidth))
               Clues =
                 get.Required.Field
                     "body"
                     (Decode.exactlyOne (Decode.object (fun get -> get.Required.Field "clues" (Decode.list decodeClue))))
-              Height =
-                get.Required.Field
-                    "body"
-                    (Decode.exactlyOne (
-                        Decode.object (fun get -> get.Required.At [ "dimensions"; "height" ] Decode.int)
-                    ))
-              Width =
-                get.Required.Field
-                    "body"
-                    (Decode.exactlyOne (
-                        Decode.object (fun get -> get.Required.At [ "dimensions"; "width" ] Decode.int)
-                    )) })
+              Height = boardHeight
+              Width = boardWidth })
 
     let parse = Decode.fromString decoder
 
