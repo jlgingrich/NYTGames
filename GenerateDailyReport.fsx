@@ -1,6 +1,7 @@
 #r "NYTGT/bin/Debug/net8.0/NYTGT.dll"
 #r "nuget: Thoth.Json.Net"
 #r "nuget: FSharp.Data"
+
 open NYTGT
 
 open System
@@ -20,13 +21,17 @@ $"# Word Games - %s{dateName}" |> toStringBuilder
 Wordle.getCurrentGame ()
 |> Result.assertOk
 |> fun game ->
-    $"\n## Wordle\n\n**By:** %s{game.Info.Editor}\n\n**Solution:** `%s{game.Solution}`"
+    let editor = defaultArg game.Info.Editor "Nobody?"
+
+    $"\n## Wordle\n\n**By:** %s{editor}\n\n**Solution:** `%s{game.Solution}`"
     |> toStringBuilder
 
 Connections.getCurrentGame ()
 |> Result.assertOk
 |> fun game ->
-    $"\n## Connections\n\n**By:** %s{game.Info.Editor}\n\n**Categories:**\n"
+    let editor = defaultArg game.Info.Editor "Nobody?"
+
+    $"\n## Connections\n\n**By:** %s{editor}\n\n**Categories:**\n"
     |> toStringBuilder
 
     game.Categories
@@ -37,7 +42,9 @@ Connections.getCurrentGame ()
 ConnectionsSportsEdition.getCurrentGame ()
 |> Result.assertOk
 |> fun game ->
-    $"\n## Connections: Sports Edition\n\n**By:** %s{game.Info.Editor}\n\n**Categories:**\n"
+    let editor = defaultArg game.Info.Editor "Nobody?"
+
+    $"\n## Connections: Sports Edition\n\n**By:** %s{editor}\n\n**Categories:**\n"
     |> toStringBuilder
 
     game.Categories
@@ -48,7 +55,8 @@ ConnectionsSportsEdition.getCurrentGame ()
 Strands.getCurrentGame ()
 |> Result.assertOk
 |> fun game ->
-    $"\n## Strands\n\n**By:** %s{game.Info.Editor}\n" |> toStringBuilder
+    let editor = defaultArg game.Info.Editor "Nobody?"
+    $"\n## Strands\n\n**By:** %s{editor}\n" |> toStringBuilder
     $"**Spangram:** `%s{game.Spangram}`\n\n**Theme words:**\n" |> toStringBuilder
     game.ThemeWords |> List.iter (fun word -> $"- `%s{word}`" |> toStringBuilder)
 
@@ -58,13 +66,16 @@ LetterBoxed.getCurrentGame ()
     let solution =
         game.Solution |> List.map (fun s -> $"`%s{s}`") |> String.concat " - "
 
-    $"\n## Letter Boxed\n\n**By:** %s{game.Info.Editor}\n\n**Solution:** %s{solution}"
+    let editor = defaultArg game.Info.Editor "Nobody?"
+
+    $"\n## Letter Boxed\n\n**By:** %s{editor}\n\n**Solution:** %s{solution}"
     |> toStringBuilder
 
 Mini.getCurrentGame ()
 |> Result.assertOk
 |> fun game ->
-    $"\n## The Mini\n\n**By:** %s{game.Info.Editor}\n" |> toStringBuilder
+    let editor = defaultArg game.Info.Editor "Nobody?"
+    $"\n## The Mini\n\n**By:** %s{editor}\n" |> toStringBuilder
 
     if not (List.isEmpty game.Info.Constructors) then
         "**Constructed by:**\n" |> toStringBuilder
@@ -87,7 +98,8 @@ Mini.getCurrentGame ()
 Crossword.getCurrentGame ()
 |> Result.assertOk
 |> fun game ->
-    $"\n## The Crossword\n\n**By:** %s{game.Info.Editor}\n" |> toStringBuilder
+    let editor = defaultArg game.Info.Editor "Nobody?"
+    $"\n## The Crossword\n\n**By:** %s{editor}\n" |> toStringBuilder
 
     if not (List.isEmpty game.Info.Constructors) then
         "**Constructed by:**\n" |> toStringBuilder
@@ -110,9 +122,9 @@ Crossword.getCurrentGame ()
 SpellingBee.getCurrentGame ()
 |> Result.assertOk
 |> fun game ->
-    $"\n## Spelling Bee\n\n**By:** %s{game.Info.Editor}\n\n**Solution:**\n"
-    |> toStringBuilder
-    
+    let editor = defaultArg game.Info.Editor "Nobody?"
+    $"\n## Spelling Bee\n\n**By:** %s{editor}\n\n**Solution:**\n" |> toStringBuilder
+
     game.Answers
     |> List.map (fun word -> $"- `%s{word.ToUpper()}`")
     |> List.sortBy (fun w -> -w.Length)

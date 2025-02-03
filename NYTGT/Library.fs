@@ -37,7 +37,7 @@ module Helpers =
 type PublicationInformation =
     { Id: int
       PrintDate: DateTime
-      Editor: string
+      Editor: string option
       Constructors: string list }
 
 // API implementations for each game
@@ -59,7 +59,7 @@ module Strands =
             { Info =
                 { Id = get.Required.Field "id" Decode.int
                   PrintDate = get.Required.Field "printDate" Decode.datetimeLocal
-                  Editor = get.Required.Field "editor" Decode.string
+                  Editor = get.Optional.Field "editor" Decode.string
                   Constructors = get.Required.Field "constructors" Decode.string |> List.singleton }
               Clue = get.Required.Field "clue" Decode.string
               Spangram = get.Required.Field "spangram" Decode.string
@@ -97,7 +97,7 @@ module Connections =
             { Info =
                 { Id = get.Required.Field "id" Decode.int
                   PrintDate = get.Required.Field "print_date" Decode.datetimeLocal
-                  Editor = get.Required.Field "editor" Decode.string
+                  Editor = get.Optional.Field "editor" Decode.string
                   Constructors = List.empty }
               Categories = get.Required.Field "categories" (Decode.list decodeCategory) })
 
@@ -131,7 +131,7 @@ module ConnectionsSportsEdition =
             { Info =
                 { Id = get.Required.Field "id" Decode.int
                   PrintDate = get.Required.Field "printDate" Decode.datetimeLocal
-                  Editor = get.Required.Field "editor" Decode.string
+                  Editor = get.Optional.Field "editor" Decode.string
                   Constructors = List.empty }
               Categories = get.Required.Field "categories" (Decode.list decodeCategory) })
 
@@ -164,7 +164,7 @@ module LetterBoxed =
             { Info =
                 { Id = get.Required.Field "id" Decode.int
                   PrintDate = get.Required.Field "printDate" Decode.datetimeLocal
-                  Editor = get.Required.Field "editor" Decode.string
+                  Editor = get.Optional.Field "editor" Decode.string
                   Constructors = List.empty }
               Sides = get.Required.Field "sides" (Decode.list Decode.string)
               Solution = get.Required.Field "ourSolution" (Decode.list Decode.string)
@@ -197,7 +197,7 @@ module SpellingBee =
             { Info =
                 { Id = get.Required.At [ "today"; "id" ] Decode.int
                   PrintDate = get.Required.At [ "today"; "printDate" ] Decode.datetimeLocal
-                  Editor = get.Required.At [ "today"; "editor" ] Decode.string
+                  Editor = get.Optional.At [ "today"; "editor" ] Decode.string
                   Constructors = List.empty }
               CenterLetter = get.Required.At [ "today"; "centerLetter" ] Decode.char
               OuterLetters = get.Required.At [ "today"; "outerLetters" ] (Decode.list Decode.char)
@@ -221,7 +221,7 @@ module Wordle =
             { Info =
                 { Id = get.Required.Field "id" Decode.int
                   PrintDate = get.Required.Field "print_date" Decode.datetimeLocal
-                  Editor = get.Required.Field "editor" Decode.string
+                  Editor = get.Optional.Field "editor" Decode.string
                   Constructors = List.empty }
               Solution = get.Required.Field "solution" Decode.string |> _.ToUpper() })
 
@@ -291,7 +291,7 @@ module Mini =
             { Info =
                 { Id = get.Required.Field "id" Decode.int
                   PrintDate = get.Required.Field "publicationDate" Decode.datetimeLocal
-                  Editor = get.Required.Field "editor" Decode.string
+                  Editor = get.Optional.Field "editor" Decode.string
                   Constructors = get.Required.Field "constructors" (Decode.list Decode.string) }
               Solution =
                 get.Required.Field
@@ -374,7 +374,7 @@ module Crossword =
             { Info =
                 { Id = get.Required.Field "id" Decode.int
                   PrintDate = get.Required.Field "publicationDate" Decode.datetimeLocal
-                  Editor = get.Required.Field "editor" Decode.string
+                  Editor = get.Optional.Field "editor" Decode.string
                   Constructors = get.Required.Field "constructors" (Decode.list Decode.string) }
               Solution =
                 get.Required.Field
