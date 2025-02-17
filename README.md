@@ -55,6 +55,8 @@ Each supported game is defined in a module that has these methods. Of these, you
 - **Spelling Bee**
   - `getGame` not supported.
 - **Strands**
+- **Sudoko**
+  - `getGame` not supported.
 - **The Crossword**
   - `getGame` not supported.
 - **The Mini**
@@ -63,9 +65,6 @@ Each supported game is defined in a module that has these methods. Of these, you
 
 ## Unsupported Games
 
-- **Sudoko**
-  - Not word-based.
-  - Appears to generate puzzles on demand rather than fetch premade puzzles.
 - **Tiles**
   - Not word-based.
   - Appears to generate puzzles on demand rather than fetch premade puzzles.
@@ -77,3 +76,4 @@ Each supported game is defined in a module that has these methods. Of these, you
   - Spelling Bee
   - The Crossword
   - The Mini
+  - Sudoku (if it has them)

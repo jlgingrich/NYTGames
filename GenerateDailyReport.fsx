@@ -131,4 +131,25 @@ SpellingBee.getCurrentGame ()
     |> String.concat "\n"
     |> toStringBuilder
 
+Suduko.getCurrentGame ()
+|> Result.assertOk
+|> fun game ->
+    $"\n## Sudoku" |> toStringBuilder
+
+    for KeyValue(difficulty, puzzle) in game do
+
+        $"\n### {difficulty.ToString()}\n" |> toStringBuilder
+
+        puzzle.Solution
+        |> Array.map (fun row ->
+            row
+            |> Array.map string
+            |> Array.chunkBySize 3
+            |> Array.map (String.concat " ")
+            |> String.concat "   ")
+        |> Array.chunkBySize 3
+        |> Array.map (String.concat "\n")
+        |> String.concat "\n\n"
+        |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
+
 File.write $"Reports/nytgames.%s{dateStamp}.md" (s.ToString())
