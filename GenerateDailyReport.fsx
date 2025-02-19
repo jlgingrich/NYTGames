@@ -9,12 +9,12 @@ open System.Text
 
 let s = StringBuilder ""
 
-let toStringBuilder (t: string) = s.Append(t) |> _.AppendLine() |> ignore
+let toStringBuilder (t: string) = s.Append t |> _.AppendLine() |> ignore
 
 let today = DateTime.Now
 
 let dateStamp = today |> Helpers.formatDate
-let dateName = today.ToString("MMMM d, yyyy")
+let dateName = today.ToString "MMMM d, yyyy"
 
 $"# Word Games - %s{dateName}" |> toStringBuilder
 
