@@ -20,6 +20,7 @@ module Result =
         | Error e -> failwithf "Assertion failed: %A" e
 
 module Helpers =
+    open System.Text
     let version i = $"v%d{i}"
 
     [<Literal>]
@@ -30,8 +31,13 @@ module Helpers =
     let urlForDate game v (date: DateTime) =
         $"https://www.nytimes.com/svc/%s{game}/%s{version v}/%s{formatDate date}.json"
 
+    let encoding = Encoding.GetEncoding "ISO-8859-1"
+
     let getRequest url =
-        Http.RequestString url |> String.filter (Char.IsAscii)
+        Http.RequestString url
+        |> fun r -> encoding.GetBytes r
+        |> Encoding.UTF8.GetString
+
 
 /// Common information that is published with each NYT game
 type PublicationInformation = {
@@ -85,7 +91,6 @@ module Connections =
         Categories: Category list
     }
 
-
     let getRaw date =
         Helpers.urlForDate "connections" 2u date |> Helpers.getRequest
 
@@ -95,7 +100,12 @@ module Connections =
             Cards =
                 get.Required.Field
                     "cards"
-                    (Decode.list (Decode.object (fun get -> get.Required.Field "content" Decode.string)))
+                    (Decode.list (
+                        Decode.oneOf [
+                            Decode.object (fun get -> get.Required.Field "content" Decode.string)
+                            Decode.object (fun get -> get.Required.Field "image_alt_text" Decode.string)
+                        ]
+                    ))
         })
 
     let private decoder: Decoder<Game> =
