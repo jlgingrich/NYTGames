@@ -39,11 +39,18 @@ Solution: 'stare'
 
 ## How to use
 
-Each supported game is defined in a module that has these methods. Of these, you probably want `getCurrentGame` or, if the game supports it, `getGame`.
+Each supported game is represented as a type that implements `IGame` and some combination of `ICurrentGame` and `IHistoryGame`.
 
-- `getRaw`: Gets a raw unparsed JSON string description of the puzzle from NYT. Usually contains unneccessary data that are ignored when parsed.
-- `parse`: Parses the raw JSON string into a structured type that better represents the actual puzzle information and is easier to work with in F#.
-- `getCurrentGame`: Gets a description of the puzzle for the system's current date. All games provide this.
+`IGame` provides access to the `parse` method, which parses the raw JSON representation of the game into a structured F# data type. This is typically not reqired.
+
+`ICurrentGame` provides access to the following methods:
+
+- `getCurrentRaw`: Gets a raw unparsed JSON string description of the current puzzle from NYT. Contains unneccessary data that are ignored when parsed.
+- `getCurrentGame`: Gets a description of the puzzle for the current date, as determined by the New York Times website. All games provide this.
+
+`IHistoryGame` provides access to the following methods:
+
+- `getRaw`: Gets a raw unparsed JSON string description of the specified puzzle from NYT. Contains unneccessary data that are ignored when parsed.
 - `getGame`: Gets a description of the puzzle on a specific date. Not all games currently provide this due to technical limitations.
 
 ## Supported Games
@@ -51,16 +58,16 @@ Each supported game is defined in a module that has these methods. Of these, you
 - **Connections**
 - **Connections: Sports Edition**
 - **Letter Boxed**
-  - `getGame` not supported.
+  - Only `ICurrentGame`
 - **Spelling Bee**
-  - `getGame` not supported.
+  - Only `ICurrentGame`
 - **Strands**
 - **Sudoko**
-  - `getGame` not supported.
+  - Only `ICurrentGame`
 - **The Crossword**
-  - `getGame` not supported.
+  - Only `ICurrentGame`
 - **The Mini**
-  - `getGame` not supported.
+  - Only `ICurrentGame`
 - **Wordle**
 
 ## Unsupported Games

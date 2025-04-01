@@ -38,37 +38,52 @@ module Helpers =
         |> fun r -> encoding.GetBytes r
         |> Encoding.UTF8.GetString
 
-
 /// Common information that is published with each NYT game
 type PublicationInformation = {
     Id: int
     PrintDate: DateTime
-    Editor: string option
-    Constructors: string list
+    EditedBy: string option
+    ConstructedBy: string option
 }
+
+// Shared interfaces
+
+type IGame<'t> =
+    abstract parse: string -> Result<'t, string>
+
+type ICurrentGame<'t> =
+    inherit IGame<'t>
+    abstract getCurrentRaw: unit -> string
+    abstract getCurrentGame: unit -> Result<'t, string>
+
+type IHistoryGame<'t> =
+    inherit IGame<'t>
+    abstract getRaw: DateTime -> string
+    abstract getGame: DateTime -> Result<'t, string>
+
+[<AutoOpen>]
+module Shared =
+    let getCurrentGame (game: ICurrentGame<'t>) = game.getCurrentGame ()
+    let getGame date (game: IHistoryGame<'t>) = game.getGame date
 
 // API implementations for each game
 
-module Strands =
-    type Game = {
-        Info: PublicationInformation
-        Clue: string
-        Spangram: string
-        ThemeWords: string list
-        Board: string array
-    }
+type StrandsGame = {
+    Info: PublicationInformation
+    Clue: string
+    Spangram: string
+    ThemeWords: string list
+    Board: string array
+}
 
-
-    let getRaw date =
-        Helpers.urlForDate "strands" 2u date |> Helpers.getRequest
-
-    let private decoder: Decoder<Game> =
+type Strands() =
+    let decoder: Decoder<StrandsGame> =
         Decode.object (fun get -> {
             Info = {
                 Id = get.Required.Field "id" Decode.int
                 PrintDate = get.Required.Field "printDate" Decode.datetimeLocal
-                Editor = get.Optional.Field "editor" Decode.string
-                Constructors = get.Required.Field "constructors" Decode.string |> List.singleton
+                EditedBy = get.Optional.Field "editor" Decode.string
+                ConstructedBy = get.Required.Field "constructors" Decode.string |> Some
             }
             Clue = get.Required.Field "clue" Decode.string
             Spangram = get.Required.Field "spangram" Decode.string
@@ -76,25 +91,34 @@ module Strands =
             Board = get.Required.Field "startingBoard" (Decode.array Decode.string)
         })
 
+    interface IGame<StrandsGame> with
+        member this.parse(arg: string) : Result<StrandsGame, string> = Decode.fromString decoder arg
 
-    let parse = Decode.fromString decoder
+    interface IHistoryGame<StrandsGame> with
+        member this.getRaw date =
+            Helpers.urlForDate "strands" 2u date |> Helpers.getRequest
 
-    let getGame date = getRaw date |> parse
+        member this.getGame date =
+            (this :> IHistoryGame<StrandsGame>).getRaw date
+            |> (this :> IGame<StrandsGame>).parse
 
-    let getCurrentGame () = DateTime.Now |> getGame
+    interface ICurrentGame<StrandsGame> with
+        member this.getCurrentRaw() : string =
+            (this :> IHistoryGame<StrandsGame>).getRaw DateTime.Now
 
-module Connections =
-    type Category = { Title: string; Cards: string list }
+        member this.getCurrentGame() : Result<StrandsGame, string> =
+            (this :> ICurrentGame<StrandsGame>).getCurrentRaw ()
+            |> (this :> IGame<StrandsGame>).parse
 
-    type Game = {
-        Info: PublicationInformation
-        Categories: Category list
-    }
+type Category = { Title: string; Cards: string list }
 
-    let getRaw date =
-        Helpers.urlForDate "connections" 2u date |> Helpers.getRequest
+type ConnectionsGame = {
+    Info: PublicationInformation
+    Categories: Category list
+}
 
-    let private decodeCategory: Decoder<Category> =
+type Connections() =
+    let decodeCategory: Decoder<Category> =
         Decode.object (fun get -> {
             Title = get.Required.Field "title" Decode.string
             Cards =
@@ -108,36 +132,43 @@ module Connections =
                     ))
         })
 
-    let private decoder: Decoder<Game> =
+    let decoder: Decoder<ConnectionsGame> =
         Decode.object (fun get -> {
             Info = {
                 Id = get.Required.Field "id" Decode.int
                 PrintDate = get.Required.Field "print_date" Decode.datetimeLocal
-                Editor = get.Optional.Field "editor" Decode.string
-                Constructors = List.empty
+                EditedBy = get.Optional.Field "editor" Decode.string
+                ConstructedBy = None
             }
             Categories = get.Required.Field "categories" (Decode.list decodeCategory)
         })
 
-    let parse = Decode.fromString decoder
+    interface IGame<ConnectionsGame> with
+        member this.parse(arg: string) : Result<ConnectionsGame, string> = Decode.fromString decoder arg
 
-    let getGame date = getRaw date |> parse
+    interface IHistoryGame<ConnectionsGame> with
+        member this.getRaw date =
+            Helpers.urlForDate "connections" 2u date |> Helpers.getRequest
 
-    let getCurrentGame () = DateTime.Now |> getGame
+        member this.getGame date =
+            (this :> IHistoryGame<ConnectionsGame>).getRaw date
+            |> (this :> IGame<ConnectionsGame>).parse
 
-module ConnectionsSportsEdition =
-    type Category = { Title: string; Cards: string list }
+    interface ICurrentGame<ConnectionsGame> with
+        member this.getCurrentRaw() : string =
+            (this :> IHistoryGame<ConnectionsGame>).getRaw DateTime.Now
 
-    type Game = {
-        Info: PublicationInformation
-        Categories: Category list
-    }
+        member this.getCurrentGame() : Result<ConnectionsGame, string> =
+            (this :> ICurrentGame<ConnectionsGame>).getCurrentRaw ()
+            |> (this :> IGame<ConnectionsGame>).parse
 
-    let getRaw date =
-        $"https://www.nytimes.com/games-assets/sports-connections/{Helpers.formatDate date}.json"
-        |> Helpers.getRequest
+type ConnectionsSportsGame = {
+    Info: PublicationInformation
+    Categories: Category list
+}
 
-    let private decodeCategory: Decoder<Category> =
+type ConnectionsSports() =
+    let decodeCategory: Decoder<Category> =
         Decode.object (fun get -> {
             Title = get.Required.Field "title" Decode.string
             Cards =
@@ -146,153 +177,168 @@ module ConnectionsSportsEdition =
                     (Decode.list (Decode.object (fun get -> get.Required.Field "content" Decode.string)))
         })
 
-    let private decoder: Decoder<Game> =
+    let decoder: Decoder<ConnectionsSportsGame> =
         Decode.object (fun get -> {
             Info = {
                 Id = get.Required.Field "id" Decode.int
                 PrintDate = get.Required.Field "printDate" Decode.datetimeLocal
-                Editor = get.Optional.Field "editor" Decode.string
-                Constructors = List.empty
+                EditedBy = get.Optional.Field "editor" Decode.string
+                ConstructedBy = None
             }
             Categories = get.Required.Field "categories" (Decode.list decodeCategory)
         })
 
-    let parse = Decode.fromString decoder
+    interface IGame<ConnectionsSportsGame> with
+        member this.parse(arg: string) : Result<ConnectionsSportsGame, string> = Decode.fromString decoder arg
 
-    let getGame date = getRaw date |> parse
+    interface IHistoryGame<ConnectionsSportsGame> with
+        member this.getRaw date =
+            $"https://www.nytimes.com/games-assets/sports-connections/{Helpers.formatDate date}.json"
+            |> Helpers.getRequest
 
-    let getCurrentGame () = DateTime.Now |> getGame
+        member this.getGame date =
+            (this :> IHistoryGame<ConnectionsSportsGame>).getRaw date
+            |> (this :> IGame<ConnectionsSportsGame>).parse
 
-module LetterBoxed =
-    type Game = {
-        Info: PublicationInformation
-        Sides: string list
-        Solution: string list
-        Par: int
-    }
+    interface ICurrentGame<ConnectionsSportsGame> with
+        member this.getCurrentRaw() : string =
+            (this :> IHistoryGame<ConnectionsSportsGame>).getRaw DateTime.Now
 
+        member this.getCurrentGame() : Result<ConnectionsSportsGame, string> =
+            (this :> ICurrentGame<ConnectionsSportsGame>).getCurrentRaw ()
+            |> (this :> IGame<ConnectionsSportsGame>).parse
 
-    let getRaw () =
-        let scriptPrefix = "window.gameData = "
+type LetterBoxedGame = {
+    Info: PublicationInformation
+    Sides: string list
+    Solution: string list
+    Par: int
+}
 
-        HtmlDocument.Load "https://www.nytimes.com/puzzles/letter-boxed"
-        |> fun n -> n.CssSelect "script[type=text/javascript]"
-        |> List.filter (fun n -> n.DirectInnerText().StartsWith scriptPrefix)
-        |> List.exactlyOne
-        |> fun n -> n.DirectInnerText()[String.length scriptPrefix ..]
-
-
-    let private decoder: Decoder<Game> =
+type LetterBoxed() =
+    let decoder: Decoder<LetterBoxedGame> =
         Decode.object (fun get -> {
             Info = {
                 Id = get.Required.Field "id" Decode.int
                 PrintDate = get.Required.Field "printDate" Decode.datetimeLocal
-                Editor = get.Optional.Field "editor" Decode.string
-                Constructors = List.empty
+                EditedBy = get.Optional.Field "editor" Decode.string
+                ConstructedBy = None
             }
             Sides = get.Required.Field "sides" (Decode.list Decode.string)
             Solution = get.Required.Field "ourSolution" (Decode.list Decode.string)
             Par = get.Required.Field "par" Decode.int
         })
 
-    let parse = Decode.fromString decoder
+    interface IGame<LetterBoxedGame> with
+        member this.parse(arg: string) : Result<LetterBoxedGame, string> = Decode.fromString decoder arg
 
-    let getCurrentGame () = getRaw () |> parse
+    interface ICurrentGame<LetterBoxedGame> with
+        member this.getCurrentRaw() : string =
+            let scriptPrefix = "window.gameData = "
 
-module SpellingBee =
-    type Game = {
-        Info: PublicationInformation
-        CenterLetter: char
-        OuterLetters: char list
-        Answers: string list
-    }
+            HtmlDocument.Load "https://www.nytimes.com/puzzles/letter-boxed"
+            |> fun n -> n.CssSelect "script[type=text/javascript]"
+            |> List.filter (fun n -> n.DirectInnerText().StartsWith scriptPrefix)
+            |> List.exactlyOne
+            |> fun n -> n.DirectInnerText()[String.length scriptPrefix ..]
 
+        member this.getCurrentGame() : Result<LetterBoxedGame, string> =
+            (this :> ICurrentGame<LetterBoxedGame>).getCurrentRaw ()
+            |> (this :> IGame<LetterBoxedGame>).parse
 
-    let getRaw () =
-        let scriptPrefix = "window.gameData = "
+type SpellingBeeGame = {
+    Info: PublicationInformation
+    CenterLetter: char
+    OuterLetters: char list
+    Answers: string list
+}
 
-        HtmlDocument.Load "https://www.nytimes.com/puzzles/spelling-bee"
-        |> fun n -> n.CssSelect "script[type=text/javascript]"
-        |> List.filter (fun n -> n.DirectInnerText().StartsWith scriptPrefix)
-        |> List.exactlyOne
-        |> fun n -> n.DirectInnerText()[String.length scriptPrefix ..]
-
-
-    let private decoder: Decoder<Game> =
+type SpellingBee() =
+    let decoder: Decoder<SpellingBeeGame> =
         Decode.object (fun get -> {
             Info = {
                 Id = get.Required.At [ "today"; "id" ] Decode.int
                 PrintDate = get.Required.At [ "today"; "printDate" ] Decode.datetimeLocal
-                Editor = get.Optional.At [ "today"; "editor" ] Decode.string
-                Constructors = List.empty
+                EditedBy = get.Optional.At [ "today"; "editor" ] Decode.string
+                ConstructedBy = None
             }
             CenterLetter = get.Required.At [ "today"; "centerLetter" ] Decode.char
             OuterLetters = get.Required.At [ "today"; "outerLetters" ] (Decode.list Decode.char)
             Answers = get.Required.At [ "today"; "answers" ] (Decode.list Decode.string)
         })
 
-    let parse = Decode.fromString decoder
+    interface IGame<SpellingBeeGame> with
+        member this.parse(arg: string) : Result<SpellingBeeGame, string> = Decode.fromString decoder arg
 
-    let getCurrentGame () = getRaw () |> parse
+    interface ICurrentGame<SpellingBeeGame> with
+        member this.getCurrentRaw() : string =
+            let scriptPrefix = "window.gameData = "
 
-module Wordle =
-    type Game = {
-        Info: PublicationInformation
-        Solution: string
-    }
+            HtmlDocument.Load "https://www.nytimes.com/puzzles/spelling-bee"
+            |> fun n -> n.CssSelect "script[type=text/javascript]"
+            |> List.filter (fun n -> n.DirectInnerText().StartsWith scriptPrefix)
+            |> List.exactlyOne
+            |> fun n -> n.DirectInnerText()[String.length scriptPrefix ..]
 
+        member this.getCurrentGame() : Result<SpellingBeeGame, string> =
+            (this :> ICurrentGame<SpellingBeeGame>).getCurrentRaw ()
+            |> (this :> IGame<SpellingBeeGame>).parse
 
-    let getRaw date =
-        Helpers.urlForDate "wordle" 2u date |> Helpers.getRequest
+type WordleGame = {
+    Info: PublicationInformation
+    Solution: string
+}
 
-    let private decoder: Decoder<Game> =
+type Wordle() =
+    let decoder: Decoder<WordleGame> =
         Decode.object (fun get -> {
             Info = {
                 Id = get.Required.Field "id" Decode.int
                 PrintDate = get.Required.Field "print_date" Decode.datetimeLocal
-                Editor = get.Optional.Field "editor" Decode.string
-                Constructors = List.empty
+                EditedBy = get.Optional.Field "editor" Decode.string
+                ConstructedBy = None
             }
             Solution = get.Required.Field "solution" Decode.string |> _.ToUpper()
         })
 
-    let parse = Decode.fromString decoder
+    interface IGame<WordleGame> with
+        member this.parse(arg: string) : Result<WordleGame, string> = Decode.fromString decoder arg
 
-    let getGame date = getRaw date |> parse
+    interface IHistoryGame<WordleGame> with
+        member this.getRaw date =
+            Helpers.urlForDate "wordle" 2u date |> Helpers.getRequest
 
-    let getCurrentGame () = DateTime.Now |> getGame
+        member this.getGame date =
+            (this :> IHistoryGame<WordleGame>).getRaw date
+            |> (this :> IGame<WordleGame>).parse
 
-module Mini =
-    type Direction =
-        | Across
-        | Down
+    interface ICurrentGame<WordleGame> with
+        member this.getCurrentRaw() : string =
+            (this :> IHistoryGame<WordleGame>).getRaw DateTime.Now
 
-    type Clue = {
-        Direction: Direction
-        Label: int
-        Hint: string
-    }
+        member this.getCurrentGame() : Result<WordleGame, string> =
+            (this :> ICurrentGame<WordleGame>).getCurrentRaw ()
+            |> (this :> IGame<WordleGame>).parse
 
-    type Game = {
-        Info: PublicationInformation
-        Solution: char option array array
-        Clues: Clue list
-        Height: int
-        Width: int
-    }
+type CrosswordDirection =
+    | Across
+    | Down
 
-    let getRaw () =
-        "https://www.nytimes.com/svc/crosswords/v6/puzzle/mini.json"
-        |> Helpers.getRequest
+type CrosswordClue = {
+    Direction: CrosswordDirection
+    Label: int
+    Hint: string
+}
 
-    let private decodeDirection: Decoder<Direction> =
+module CrosswordShared =
+    let decodeDirection: Decoder<CrosswordDirection> =
         Decode.string
         |> Decode.andThen (function
             | "Across" -> Decode.succeed Across
             | "Down" -> Decode.succeed Down
             | invalid -> Decode.fail (sprintf " `%s` is an invalid clue direction" invalid))
 
-    let private decodeClue: Decoder<Clue> =
+    let decodeClue: Decoder<CrosswordClue> =
         Decode.object (fun get -> {
             Direction = get.Required.Field "direction" decodeDirection
             Label = get.Required.Field "label" Decode.int
@@ -302,11 +348,20 @@ module Mini =
                     (Decode.exactlyOne (Decode.object (fun get -> get.Required.Field "plain" Decode.string)))
         })
 
-    let private decodeCell: Decoder<char option> =
+    let decodeCell: Decoder<string option> =
         Decode.object (fun get -> get.Optional.Field "answer" Decode.string)
-        |> Decode.andThen (Option.map Char.Parse >> Decode.succeed)
 
-    let private decoder: Decoder<Game> =
+type TheMiniGame = {
+    Info: PublicationInformation
+    Solution: string option array array
+    Clues: CrosswordClue list
+    Height: int
+    Width: int
+}
+
+
+type TheMini() =
+    let decoder: Decoder<TheMiniGame> =
         Decode.object (fun get ->
             let boardHeight =
                 get.Required.Field
@@ -326,78 +381,53 @@ module Mini =
                 Info = {
                     Id = get.Required.Field "id" Decode.int
                     PrintDate = get.Required.Field "publicationDate" Decode.datetimeLocal
-                    Editor = get.Optional.Field "editor" Decode.string
-                    Constructors = get.Required.Field "constructors" (Decode.list Decode.string)
+                    EditedBy = get.Optional.Field "editor" Decode.string
+                    ConstructedBy =
+                        get.Required.Field "constructors" (Decode.list Decode.string)
+                        |> List.exactlyOne
+                        |> Some
                 }
                 Solution =
                     get.Required.Field
                         "body"
                         (Decode.exactlyOne (
-                            Decode.object (fun get -> get.Required.Field "cells" (Decode.array decodeCell))
+                            Decode.object (fun get ->
+                                get.Required.Field "cells" (Decode.array CrosswordShared.decodeCell))
                          )
                          |> Decode.map (Array.chunkBySize boardWidth))
                 Clues =
                     get.Required.Field
                         "body"
                         (Decode.exactlyOne (
-                            Decode.object (fun get -> get.Required.Field "clues" (Decode.list decodeClue))
+                            Decode.object (fun get ->
+                                get.Required.Field "clues" (Decode.list CrosswordShared.decodeClue))
                         ))
                 Height = boardHeight
                 Width = boardWidth
             })
 
-    let parse = Decode.fromString decoder
+    interface IGame<TheMiniGame> with
+        member this.parse(arg: string) : Result<TheMiniGame, string> = Decode.fromString decoder arg
 
-    let getCurrentGame () = getRaw () |> parse
+    interface ICurrentGame<TheMiniGame> with
+        member this.getCurrentRaw() : string =
+            "https://www.nytimes.com/svc/crosswords/v6/puzzle/mini.json"
+            |> Helpers.getRequest
 
+        member this.getCurrentGame() : Result<TheMiniGame, string> =
+            (this :> ICurrentGame<TheMiniGame>).getCurrentRaw ()
+            |> (this :> IGame<TheMiniGame>).parse
 
-module Crossword =
-    type Direction =
-        | Across
-        | Down
+type TheCrosswordGame = {
+    Info: PublicationInformation
+    Solution: string option array array
+    Clues: CrosswordClue list
+    Height: int
+    Width: int
+}
 
-    type Clue = {
-        Direction: Direction
-        Label: int
-        Hint: string
-    }
-
-    type Game = {
-        Info: PublicationInformation
-        Solution: string option array array
-        Clues: Clue list
-        Height: int
-        Width: int
-    }
-
-    let getRaw () =
-        Http.RequestString(
-            "https://www.nytimes.com/svc/crosswords/v6/puzzle/daily.json",
-            headers = [ "x-games-auth-bypass", "true" ]
-        )
-        |> String.filter (Char.IsAscii)
-
-    let private decodeDirection: Decoder<Direction> =
-        Decode.string
-        |> Decode.andThen (function
-            | "Across" -> Decode.succeed Across
-            | "Down" -> Decode.succeed Down
-            | invalid -> Decode.fail (sprintf " `%s` is an invalid clue direction" invalid))
-
-    let private decodeClue: Decoder<Clue> =
-        Decode.object (fun get -> {
-            Direction = get.Required.Field "direction" decodeDirection
-            Label = get.Required.Field "label" Decode.int
-            Hint =
-                get.Required.Field
-                    "text"
-                    (Decode.exactlyOne (Decode.object (fun get -> get.Required.Field "plain" Decode.string)))
-        })
-
-    let private decodeCell: Decoder<string option> =
-        Decode.object (fun get -> get.Optional.Field "answer" Decode.string)
-
-    let private decoder: Decoder<Game> =
+type TheCrossword() =
+    let decoder: Decoder<TheCrosswordGame> =
         Decode.object (fun get ->
             let boardHeight =
                 get.Required.Field
@@ -417,66 +447,74 @@ module Crossword =
                 Info = {
                     Id = get.Required.Field "id" Decode.int
                     PrintDate = get.Required.Field "publicationDate" Decode.datetimeLocal
-                    Editor = get.Optional.Field "editor" Decode.string
-                    Constructors = get.Required.Field "constructors" (Decode.list Decode.string)
+                    EditedBy = get.Optional.Field "editor" Decode.string
+                    ConstructedBy =
+                        get.Required.Field "constructors" (Decode.list Decode.string)
+                        |> List.exactlyOne
+                        |> Some
                 }
                 Solution =
                     get.Required.Field
                         "body"
                         (Decode.exactlyOne (
-                            Decode.object (fun get -> get.Required.Field "cells" (Decode.array decodeCell))
+                            Decode.object (fun get ->
+                                get.Required.Field "cells" (Decode.array CrosswordShared.decodeCell))
                          )
                          |> Decode.map (Array.chunkBySize boardWidth))
                 Clues =
                     get.Required.Field
                         "body"
                         (Decode.exactlyOne (
-                            Decode.object (fun get -> get.Required.Field "clues" (Decode.list decodeClue))
+                            Decode.object (fun get ->
+                                get.Required.Field "clues" (Decode.list CrosswordShared.decodeClue))
                         ))
                 Height = boardHeight
                 Width = boardWidth
             })
 
-    let parse = Decode.fromString decoder
+    interface IGame<TheCrosswordGame> with
+        member this.parse(arg: string) : Result<TheCrosswordGame, string> = Decode.fromString decoder arg
 
-    let getCurrentGame () = getRaw () |> parse
+    interface ICurrentGame<TheCrosswordGame> with
+        member this.getCurrentRaw() : string =
+            Http.RequestString(
+                "https://www.nytimes.com/svc/crosswords/v6/puzzle/daily.json",
+                headers = [ "x-games-auth-bypass", "true" ]
+            )
+            |> String.filter (Char.IsAscii)
 
-module Suduko =
-    [<RequireQualifiedAccess>]
-    type Difficulty =
-        | Easy
-        | Medium
-        | Hard
+        member this.getCurrentGame() : Result<TheCrosswordGame, string> =
+            (this :> ICurrentGame<TheCrosswordGame>).getCurrentRaw ()
+            |> (this :> IGame<TheCrosswordGame>).parse
 
-    let parseDifficulty s =
+[<RequireQualifiedAccess>]
+type SudukoDifficulty =
+    | Easy
+    | Medium
+    | Hard
+
+    static member parse s =
         match s with
-        | "easy" -> Difficulty.Easy
-        | "medium" -> Difficulty.Medium
-        | "hard" -> Difficulty.Hard
+        | "easy" -> Easy
+        | "medium" -> Medium
+        | "hard" -> Hard
         | e -> failwithf "Unknown difficulty: '%s'" e
 
-    type Game = {
-        Info: PublicationInformation
-        Puzzle: (int option) array array
-        Solution: int array array
-    }
+type SudukoGame = {
+    Info: PublicationInformation
+    Puzzle: (int option) array array
+    Solution: int array array
+}
 
-    let getRaw () =
-        let scriptPrefix = "window.gameData = "
+type Suduko() =
 
-        HtmlDocument.Load "https://www.nytimes.com/puzzles/sudoku"
-        |> fun n -> n.CssSelect "script[type=text/javascript]"
-        |> List.filter (fun n -> n.DirectInnerText().StartsWith scriptPrefix)
-        |> List.exactlyOne
-        |> fun n -> n.DirectInnerText()[String.length scriptPrefix ..]
-
-    let private decoder: Decoder<Game> =
+    let decoder: Decoder<SudukoGame> =
         Decode.object (fun get -> {
             Info = {
                 Id = get.Required.Field "puzzle_id" Decode.int
                 PrintDate = get.Required.Field "published" Decode.datetimeLocal
-                Editor = None
-                Constructors = List.empty
+                EditedBy = None
+                ConstructedBy = None
             }
             Puzzle =
                 get.Required.At
@@ -489,11 +527,25 @@ module Suduko =
                     (Decode.array Decode.int |> Decode.map (Array.chunkBySize 9))
         })
 
-    let private decodeData: Decoder<Map<Difficulty, Game>> =
+    let decodeData: Decoder<Map<SudukoDifficulty, SudukoGame>> =
         CustomDecoders.keyValueOptions (CustomDecoders.ignoreFail decoder)
-        |> Decode.andThen (fun kvs -> kvs |> List.map (fun (k, v) -> (parseDifficulty k), v) |> Decode.succeed)
+        |> Decode.andThen (fun kvs -> kvs |> List.map (fun (k, v) -> (SudukoDifficulty.parse k), v) |> Decode.succeed)
         |> Decode.map Map
 
-    let parse = Decode.fromString decodeData
+    interface IGame<Map<SudukoDifficulty, SudukoGame>> with
+        member this.parse(arg: string) : Result<Map<SudukoDifficulty, SudukoGame>, string> =
+            Decode.fromString decodeData arg
 
-    let getCurrentGame () = getRaw () |> parse
+    interface ICurrentGame<Map<SudukoDifficulty, SudukoGame>> with
+        member this.getCurrentRaw() : string =
+            let scriptPrefix = "window.gameData = "
+
+            HtmlDocument.Load "https://www.nytimes.com/puzzles/sudoku"
+            |> fun n -> n.CssSelect "script[type=text/javascript]"
+            |> List.filter (fun n -> n.DirectInnerText().StartsWith scriptPrefix)
+            |> List.exactlyOne
+            |> fun n -> n.DirectInnerText()[String.length scriptPrefix ..]
+
+        member this.getCurrentGame() : Result<Map<SudukoDifficulty, SudukoGame>, string> =
+            (this :> ICurrentGame<Map<SudukoDifficulty, SudukoGame>>).getCurrentRaw ()
+            |> (this :> IGame<Map<SudukoDifficulty, SudukoGame>>).parse

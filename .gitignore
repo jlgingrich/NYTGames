@@ -1,6 +1,5 @@
 .fake
-*.json
-*.html
 Reports
+Raw
 bin
 obj

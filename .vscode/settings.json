@@ -1,0 +1,6 @@
+{
+    "files.readonlyInclude": {
+        "c:\\Users\\GingrichLiam\\Programming\\NYTGameTools\\Reports\\*.md": true,
+        "c:\\Users\\GingrichLiam\\Programming\\NYTGameTools\\Raw\\*.json": true
+    }
+}

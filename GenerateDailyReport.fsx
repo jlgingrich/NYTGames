@@ -18,18 +18,20 @@ let dateName = today.ToString "MMMM d, yyyy"
 
 $"# Word Games - %s{dateName}" |> toStringBuilder
 
-Wordle.getCurrentGame ()
+Wordle()
+|> getCurrentGame
 |> Result.assertOk
 |> fun game ->
-    let editor = defaultArg game.Info.Editor "Nobody?"
+    let editor = defaultArg game.Info.EditedBy "Nobody?"
 
     $"\n## Wordle\n\n**By:** %s{editor}\n\n**Solution:** `%s{game.Solution}`"
     |> toStringBuilder
 
-Connections.getCurrentGame ()
+Connections()
+|> getCurrentGame
 |> Result.assertOk
 |> fun game ->
-    let editor = defaultArg game.Info.Editor "Nobody?"
+    let editor = defaultArg game.Info.EditedBy "Nobody?"
 
     $"\n## Connections\n\n**By:** %s{editor}\n\n**Categories:**\n"
     |> toStringBuilder
@@ -39,10 +41,11 @@ Connections.getCurrentGame ()
         $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
         c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
 
-ConnectionsSportsEdition.getCurrentGame ()
+ConnectionsSports()
+|> getCurrentGame
 |> Result.assertOk
 |> fun game ->
-    let editor = defaultArg game.Info.Editor "Nobody?"
+    let editor = defaultArg game.Info.EditedBy "Nobody?"
 
     $"\n## Connections: Sports Edition\n\n**By:** %s{editor}\n\n**Categories:**\n"
     |> toStringBuilder
@@ -52,62 +55,42 @@ ConnectionsSportsEdition.getCurrentGame ()
         $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
         c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
 
-Strands.getCurrentGame ()
+Strands()
+|> getCurrentGame
 |> Result.assertOk
 |> fun game ->
-    let editor = defaultArg game.Info.Editor "Nobody?"
+    let editor = defaultArg game.Info.EditedBy "Nobody?"
     $"\n## Strands\n\n**By:** %s{editor}\n" |> toStringBuilder
     $"**Spangram:** `%s{game.Spangram}`\n\n**Theme words:**\n" |> toStringBuilder
     game.ThemeWords |> List.iter (fun word -> $"- `%s{word}`" |> toStringBuilder)
 
-LetterBoxed.getCurrentGame ()
+LetterBoxed()
+|> getCurrentGame
 |> Result.assertOk
 |> fun game ->
     let solution =
         game.Solution |> List.map (fun s -> $"`%s{s}`") |> String.concat " - "
 
-    let editor = defaultArg game.Info.Editor "Nobody?"
+    let editor = defaultArg game.Info.EditedBy "Nobody?"
 
     $"\n## Letter Boxed\n\n**By:** %s{editor}\n\n**Solution:** %s{solution}"
     |> toStringBuilder
 
-Mini.getCurrentGame ()
+TheMini()
+|> getCurrentGame
 |> Result.assertOk
 |> fun game ->
-    let editor = defaultArg game.Info.Editor "Nobody?"
-    $"\n## The Mini\n\n**By:** %s{editor}\n" |> toStringBuilder
+    "\n## The Mini\n" |> toStringBuilder
 
-    if not (List.isEmpty game.Info.Constructors) then
-        "**Constructed by:**\n" |> toStringBuilder
+    match game.Info.EditedBy with
+    | Some s -> $"**Edited by:** %s{s}\n" |> toStringBuilder
+    | None -> ()
 
-        game.Info.Constructors
-        |> List.iter (fun word -> $"- %s{word}" |> toStringBuilder)
+    match game.Info.ConstructedBy with
+    | Some s -> $"**Constructed by:** %s{s}\n" |> toStringBuilder
+    | None -> ()
 
-    $"\n**Solution:**\n" |> toStringBuilder
-
-    game.Solution
-    |> Array.map (fun row ->
-        row
-        |> Array.map (function
-            | Some c -> Char.ToString c
-            | None -> " ")
-        |> String.concat " ")
-    |> String.concat "\n"
-    |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
-
-Crossword.getCurrentGame ()
-|> Result.assertOk
-|> fun game ->
-    let editor = defaultArg game.Info.Editor "Nobody?"
-    $"\n## The Crossword\n\n**By:** %s{editor}\n" |> toStringBuilder
-
-    if not (List.isEmpty game.Info.Constructors) then
-        "**Constructed by:**\n" |> toStringBuilder
-
-        game.Info.Constructors
-        |> List.iter (fun word -> $"- %s{word}" |> toStringBuilder)
-
-    $"\n**Solution:**\n" |> toStringBuilder
+    $"**Solution:**\n" |> toStringBuilder
 
     game.Solution
     |> Array.map (fun row ->
@@ -119,10 +102,37 @@ Crossword.getCurrentGame ()
     |> String.concat "\n"
     |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
 
-SpellingBee.getCurrentGame ()
+TheCrossword()
+|> getCurrentGame
 |> Result.assertOk
 |> fun game ->
-    let editor = defaultArg game.Info.Editor "Nobody?"
+    "\n## The Crossword\n" |> toStringBuilder
+
+    match game.Info.EditedBy with
+    | Some s -> $"**Edited by:** %s{s}\n" |> toStringBuilder
+    | None -> ()
+
+    match game.Info.ConstructedBy with
+    | Some s -> $"**Constructed by:** %s{s}\n" |> toStringBuilder
+    | None -> ()
+
+    $"**Solution:**\n" |> toStringBuilder
+
+    game.Solution
+    |> Array.map (fun row ->
+        row
+        |> Array.map (function
+            | Some c -> c
+            | None -> " ")
+        |> String.concat " ")
+    |> String.concat "\n"
+    |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
+
+SpellingBee()
+|> getCurrentGame
+|> Result.assertOk
+|> fun game ->
+    let editor = defaultArg game.Info.EditedBy "Nobody?"
     $"\n## Spelling Bee\n\n**By:** %s{editor}\n\n**Solution:**\n" |> toStringBuilder
 
     game.Answers
@@ -131,7 +141,8 @@ SpellingBee.getCurrentGame ()
     |> String.concat "\n"
     |> toStringBuilder
 
-Suduko.getCurrentGame ()
+Suduko()
+|> getCurrentGame
 |> Result.assertOk
 |> fun game ->
     $"\n## Sudoku" |> toStringBuilder
@@ -152,4 +163,4 @@ Suduko.getCurrentGame ()
         |> String.concat "\n\n"
         |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
 
-File.write $"Reports/nytgames.%s{dateStamp}.md" (s.ToString())
+File.write $"Reports/%s{dateStamp}.nytgames.md" (s.ToString())
