@@ -32,7 +32,10 @@ let dumpJson filename raw =
 // Exports
 
 let inline dumpGame (game: ICurrentGame<'t>) =
-    game.getCurrentRaw () |> dumpJson (game.GetType().Name)
+    try
+        game.getCurrentRaw () |> dumpJson (game.GetType().Name)
+    with :? Net.WebException as exn ->
+        printfn "%A" exn
 
 [
     async { do dumpGame <| Wordle() }

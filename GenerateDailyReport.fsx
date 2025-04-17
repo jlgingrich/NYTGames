@@ -18,149 +18,176 @@ let dateName = today.ToString "MMMM d, yyyy"
 
 $"# Word Games - %s{dateName}" |> toStringBuilder
 
-Wordle()
-|> getCurrentGame
-|> Result.assertOk
-|> fun game ->
-    let editor = defaultArg game.Info.EditedBy "Nobody?"
+try
+    Wordle()
+    |> getCurrentGame
+    |> Result.assertOk
+    |> fun game ->
+        let editor = defaultArg game.Info.EditedBy "Nobody?"
 
-    $"\n## Wordle\n\n**By:** %s{editor}\n\n**Solution:** `%s{game.Solution}`"
-    |> toStringBuilder
+        $"\n## Wordle\n\n**By:** %s{editor}\n\n**Solution:** `%s{game.Solution}`"
+        |> toStringBuilder
+with :? Net.WebException ->
+    printfn "Test failed: Wordle"
 
-Connections()
-|> getCurrentGame
-|> Result.assertOk
-|> fun game ->
-    let editor = defaultArg game.Info.EditedBy "Nobody?"
+try
+    Connections()
+    |> getCurrentGame
+    |> Result.assertOk
+    |> fun game ->
+        let editor = defaultArg game.Info.EditedBy "Nobody?"
 
-    $"\n## Connections\n\n**By:** %s{editor}\n\n**Categories:**\n"
-    |> toStringBuilder
+        $"\n## Connections\n\n**By:** %s{editor}\n\n**Categories:**\n"
+        |> toStringBuilder
 
-    game.Categories
-    |> List.iteri (fun i c ->
-        $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
-        c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
+        game.Categories
+        |> List.iteri (fun i c ->
+            $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
+            c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
+with :? Net.WebException ->
+    printfn "Test failed: Connections"
 
-ConnectionsSports()
-|> getCurrentGame
-|> Result.assertOk
-|> fun game ->
-    let editor = defaultArg game.Info.EditedBy "Nobody?"
+try
+    ConnectionsSports()
+    |> getCurrentGame
+    |> Result.assertOk
+    |> fun game ->
+        let editor = defaultArg game.Info.EditedBy "Nobody?"
 
-    $"\n## Connections: Sports Edition\n\n**By:** %s{editor}\n\n**Categories:**\n"
-    |> toStringBuilder
+        $"\n## Connections: Sports Edition\n\n**By:** %s{editor}\n\n**Categories:**\n"
+        |> toStringBuilder
 
-    game.Categories
-    |> List.iteri (fun i c ->
-        $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
-        c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
+        game.Categories
+        |> List.iteri (fun i c ->
+            $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
+            c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
+with :? Net.WebException ->
+    printfn "Test failed: Connections: Sports Edition"
 
-Strands()
-|> getCurrentGame
-|> Result.assertOk
-|> fun game ->
-    let editor = defaultArg game.Info.EditedBy "Nobody?"
-    $"\n## Strands\n\n**By:** %s{editor}\n" |> toStringBuilder
-    $"**Spangram:** `%s{game.Spangram}`\n\n**Theme words:**\n" |> toStringBuilder
-    game.ThemeWords |> List.iter (fun word -> $"- `%s{word}`" |> toStringBuilder)
+try
+    Strands()
+    |> getCurrentGame
+    |> Result.assertOk
+    |> fun game ->
+        let editor = defaultArg game.Info.EditedBy "Nobody?"
+        $"\n## Strands\n\n**By:** %s{editor}\n" |> toStringBuilder
+        $"**Spangram:** `%s{game.Spangram}`\n\n**Theme words:**\n" |> toStringBuilder
+        game.ThemeWords |> List.iter (fun word -> $"- `%s{word}`" |> toStringBuilder)
+with :? Net.WebException ->
+    printfn "Test failed: Spangram"
 
-LetterBoxed()
-|> getCurrentGame
-|> Result.assertOk
-|> fun game ->
-    let solution =
-        game.Solution |> List.map (fun s -> $"`%s{s}`") |> String.concat " - "
+try
+    LetterBoxed()
+    |> getCurrentGame
+    |> Result.assertOk
+    |> fun game ->
+        let solution =
+            game.Solution |> List.map (fun s -> $"`%s{s}`") |> String.concat " - "
 
-    let editor = defaultArg game.Info.EditedBy "Nobody?"
+        let editor = defaultArg game.Info.EditedBy "Nobody?"
 
-    $"\n## Letter Boxed\n\n**By:** %s{editor}\n\n**Solution:** %s{solution}"
-    |> toStringBuilder
+        $"\n## Letter Boxed\n\n**By:** %s{editor}\n\n**Solution:** %s{solution}"
+        |> toStringBuilder
+with :? Net.WebException ->
+    printfn "Test failed: Letter Boxed"
 
-TheMini()
-|> getCurrentGame
-|> Result.assertOk
-|> fun game ->
-    "\n## The Mini\n" |> toStringBuilder
+try
+    TheMini()
+    |> getCurrentGame
+    |> Result.assertOk
+    |> fun game ->
+        "\n## The Mini\n" |> toStringBuilder
 
-    match game.Info.EditedBy with
-    | Some s -> $"**Edited by:** %s{s}\n" |> toStringBuilder
-    | None -> ()
+        match game.Info.EditedBy with
+        | Some s -> $"**Edited by:** %s{s}\n" |> toStringBuilder
+        | None -> ()
 
-    match game.Info.ConstructedBy with
-    | Some s -> $"**Constructed by:** %s{s}\n" |> toStringBuilder
-    | None -> ()
+        match game.Info.ConstructedBy with
+        | Some s -> $"**Constructed by:** %s{s}\n" |> toStringBuilder
+        | None -> ()
 
-    $"**Solution:**\n" |> toStringBuilder
+        $"**Solution:**\n" |> toStringBuilder
 
-    game.Solution
-    |> Array.map (fun row ->
-        row
-        |> Array.map (function
-            | Some c -> c
-            | None -> " ")
-        |> String.concat " ")
-    |> String.concat "\n"
-    |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
-
-TheCrossword()
-|> getCurrentGame
-|> Result.assertOk
-|> fun game ->
-    "\n## The Crossword\n" |> toStringBuilder
-
-    match game.Info.EditedBy with
-    | Some s -> $"**Edited by:** %s{s}\n" |> toStringBuilder
-    | None -> ()
-
-    match game.Info.ConstructedBy with
-    | Some s -> $"**Constructed by:** %s{s}\n" |> toStringBuilder
-    | None -> ()
-
-    $"**Solution:**\n" |> toStringBuilder
-
-    game.Solution
-    |> Array.map (fun row ->
-        row
-        |> Array.map (function
-            | Some c -> c
-            | None -> " ")
-        |> String.concat " ")
-    |> String.concat "\n"
-    |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
-
-SpellingBee()
-|> getCurrentGame
-|> Result.assertOk
-|> fun game ->
-    let editor = defaultArg game.Info.EditedBy "Nobody?"
-    $"\n## Spelling Bee\n\n**By:** %s{editor}\n\n**Solution:**\n" |> toStringBuilder
-
-    game.Answers
-    |> List.map (fun word -> $"- `%s{word.ToUpper()}`")
-    |> List.sortBy (fun w -> -w.Length)
-    |> String.concat "\n"
-    |> toStringBuilder
-
-Suduko()
-|> getCurrentGame
-|> Result.assertOk
-|> fun game ->
-    $"\n## Sudoku" |> toStringBuilder
-
-    for KeyValue(difficulty, puzzle) in game do
-
-        $"\n### {difficulty.ToString()}\n" |> toStringBuilder
-
-        puzzle.Solution
+        game.Solution
         |> Array.map (fun row ->
             row
-            |> Array.map string
-            |> Array.chunkBySize 3
-            |> Array.map (String.concat " ")
-            |> String.concat "   ")
-        |> Array.chunkBySize 3
-        |> Array.map (String.concat "\n")
-        |> String.concat "\n\n"
+            |> Array.map (function
+                | Some c -> c
+                | None -> " ")
+            |> String.concat " ")
+        |> String.concat "\n"
         |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
+with :? Net.WebException ->
+    printfn "Test failed: The Mini"
+
+try
+    TheCrossword()
+    |> getCurrentGame
+    |> Result.assertOk
+    |> fun game ->
+        "\n## The Crossword\n" |> toStringBuilder
+
+        match game.Info.EditedBy with
+        | Some s -> $"**Edited by:** %s{s}\n" |> toStringBuilder
+        | None -> ()
+
+        match game.Info.ConstructedBy with
+        | Some s -> $"**Constructed by:** %s{s}\n" |> toStringBuilder
+        | None -> ()
+
+        $"**Solution:**\n" |> toStringBuilder
+
+        game.Solution
+        |> Array.map (fun row ->
+            row
+            |> Array.map (function
+                | Some c -> c
+                | None -> " ")
+            |> String.concat " ")
+        |> String.concat "\n"
+        |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
+with :? Net.WebException ->
+    printfn "Test failed: The Crossword"
+
+try
+    SpellingBee()
+    |> getCurrentGame
+    |> Result.assertOk
+    |> fun game ->
+        let editor = defaultArg game.Info.EditedBy "Nobody?"
+        $"\n## Spelling Bee\n\n**By:** %s{editor}\n\n**Solution:**\n" |> toStringBuilder
+
+        game.Answers
+        |> List.map (fun word -> $"- `%s{word.ToUpper()}`")
+        |> List.sortBy (fun w -> -w.Length)
+        |> String.concat "\n"
+        |> toStringBuilder
+with :? Net.WebException ->
+    printfn "Test failed: Spelling Bee"
+
+try
+    Suduko()
+    |> getCurrentGame
+    |> Result.assertOk
+    |> fun game ->
+        $"\n## Sudoku" |> toStringBuilder
+
+        for KeyValue(difficulty, puzzle) in game do
+
+            $"\n### {difficulty.ToString()}\n" |> toStringBuilder
+
+            puzzle.Solution
+            |> Array.map (fun row ->
+                row
+                |> Array.map string
+                |> Array.chunkBySize 3
+                |> Array.map (String.concat " ")
+                |> String.concat "   ")
+            |> Array.chunkBySize 3
+            |> Array.map (String.concat "\n")
+            |> String.concat "\n\n"
+            |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
+with :? Net.WebException ->
+    printfn "Test failed: Suduko"
 
 File.write $"Reports/%s{dateStamp}.nytgames.md" (s.ToString())
