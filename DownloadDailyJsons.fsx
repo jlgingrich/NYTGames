@@ -7,7 +7,6 @@ open Newtonsoft.Json
 
 open System
 open System.IO
-open Microsoft.FSharp.Quotations
 
 let today = DateTime.Now
 let dateStamp = today |> Helpers.formatDate

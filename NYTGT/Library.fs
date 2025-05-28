@@ -180,12 +180,12 @@ type ConnectionsSports() =
     let decoder: Decoder<ConnectionsSportsGame> =
         Decode.object (fun get -> {
             Info = {
-                Id = get.Required.Field "id" Decode.int
-                PrintDate = get.Required.Field "printDate" Decode.datetimeLocal
-                EditedBy = get.Optional.Field "editor" Decode.string
+                Id = get.Required.At [ "data"; "getPuzzleById"; "id" ] Decode.int
+                PrintDate = get.Required.At [ "data"; "getPuzzleById"; "printDate" ] Decode.datetimeLocal
+                EditedBy = get.Optional.At [ "data"; "getPuzzleById"; "editor" ] Decode.string
                 ConstructedBy = None
             }
-            Categories = get.Required.Field "categories" (Decode.list decodeCategory)
+            Categories = get.Required.At [ "data"; "getPuzzleById"; "categories" ] (Decode.list decodeCategory)
         })
 
     interface IGame<ConnectionsSportsGame> with
@@ -193,8 +193,41 @@ type ConnectionsSports() =
 
     interface IHistoryGame<ConnectionsSportsGame> with
         member this.getRaw date =
-            $"https://www.nytimes.com/games-assets/sports-connections/{Helpers.formatDate date}.json"
-            |> Helpers.getRequest
+            let gqlQuery =
+                """query GetPuzzleById($puzzleId: String!) {
+                                    getPuzzleById(puzzleId: $puzzleId) {
+                                        categories {
+                                            title
+                                            cards {
+                                                content
+                                                position
+                                                img
+                                            }
+                                        }
+                                    printDate
+                                    id
+                                    editor
+                                }
+                            }"""
+
+            Http.RequestString(
+                "https://api.theathletic.com/graphql",
+                headers = [ HttpRequestHeaders.ContentType "application/json; charset=utf-8" ],
+                httpMethod = HttpMethod.Post,
+                body =
+                    HttpRequestBody.TextRequest(
+                        sprintf
+                            """{
+                                    "query":
+                                        "%s",
+                                    "variables": {
+                                        "puzzleId": "%s"
+                                    }
+                                }"""
+                            (gqlQuery.ReplaceLineEndings(@"\n"))
+                            (Helpers.formatDate date)
+                    )
+            )
 
         member this.getGame date =
             (this :> IHistoryGame<ConnectionsSportsGame>).getRaw date

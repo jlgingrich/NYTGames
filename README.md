@@ -57,7 +57,6 @@ Each supported game is represented as a type that implements `IGame` and some co
 
 - **Connections**
 - **Connections: Sports Edition**
-  - Currently broken; they switched from a JSON backend to a GraphQL backend. I will repair this when I get the chance.
 - **Letter Boxed**
   - Only `ICurrentGame`
 - **Spelling Bee**
@@ -78,8 +77,6 @@ Each supported game is represented as a type that implements `IGame` and some co
   - Appears to generate puzzles on demand rather than fetch premade puzzles.
 
 ## Future plans
-
-- Add GraphQL capability for Connections: Sports Edition
 
 - Figure out how to access archived games for the following:
   - Letter Boxed

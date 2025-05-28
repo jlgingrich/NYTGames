@@ -28,7 +28,7 @@ try
         $"\n## Wordle\n\n**By:** %s{editor}\n\n**Solution:** `%s{game.Solution}`"
         |> toStringBuilder
 with :? Net.WebException ->
-    printfn "Test failed: Wordle"
+    printfn "Unable to access Wordle"
 
 try
     Connections()
@@ -45,7 +45,7 @@ try
             $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
             c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
 with :? Net.WebException ->
-    printfn "Test failed: Connections"
+    printfn "Unable to access Connections"
 
 try
     ConnectionsSports()
@@ -62,7 +62,7 @@ try
             $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
             c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
 with :? Net.WebException ->
-    printfn "Test failed: Connections: Sports Edition"
+    printfn "Unable to access Connections: Sports Edition"
 
 try
     Strands()
@@ -74,7 +74,7 @@ try
         $"**Spangram:** `%s{game.Spangram}`\n\n**Theme words:**\n" |> toStringBuilder
         game.ThemeWords |> List.iter (fun word -> $"- `%s{word}`" |> toStringBuilder)
 with :? Net.WebException ->
-    printfn "Test failed: Spangram"
+    printfn "Unable to access Spangram"
 
 try
     LetterBoxed()
@@ -89,7 +89,7 @@ try
         $"\n## Letter Boxed\n\n**By:** %s{editor}\n\n**Solution:** %s{solution}"
         |> toStringBuilder
 with :? Net.WebException ->
-    printfn "Test failed: Letter Boxed"
+    printfn "Unable to access Letter Boxed"
 
 try
     TheMini()
@@ -118,7 +118,7 @@ try
         |> String.concat "\n"
         |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
 with :? Net.WebException ->
-    printfn "Test failed: The Mini"
+    printfn "Unable to access The Mini"
 
 try
     TheCrossword()
@@ -147,7 +147,7 @@ try
         |> String.concat "\n"
         |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
 with :? Net.WebException ->
-    printfn "Test failed: The Crossword"
+    printfn "Unable to access The Crossword"
 
 try
     SpellingBee()
@@ -163,7 +163,7 @@ try
         |> String.concat "\n"
         |> toStringBuilder
 with :? Net.WebException ->
-    printfn "Test failed: Spelling Bee"
+    printfn "Unable to access Spelling Bee"
 
 try
     Suduko()
@@ -188,6 +188,6 @@ try
             |> String.concat "\n\n"
             |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
 with :? Net.WebException ->
-    printfn "Test failed: Suduko"
+    printfn "Unable to access Suduko"
 
 File.write $"Reports/%s{dateStamp}.nytgames.md" (s.ToString())
