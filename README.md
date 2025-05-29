@@ -1,4 +1,4 @@
-# NYTGameTools
+# NYTGames
 
 An F# API for various NYT word games. Comes with a script that generates a Markdown report with the current day's solutions.
 
