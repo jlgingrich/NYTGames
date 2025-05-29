@@ -1,6 +1,6 @@
 // Uses NYTGames to download the solutions to all of today's games as JSON files
 
-#r "NYTGames/bin/Debug/net8.0/NYTGames.dll"
+#r "NYTGames/bin/Debug/net9.0/NYTGames.dll"
 #r "nuget: Thoth.Json.Net"
 #r "nuget: FSharp.Data"
 #r "nuget: ObjectDumper.Net"
