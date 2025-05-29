@@ -1,8 +1,9 @@
-namespace NYTGT
+namespace Thoth.Json.Net
 
 open Thoth.Json.Net
 
-module CustomDecoders =
+/// Extensions to <code>Thoth.Json.Net.Decode</code>.
+module Decode =
     let ignoreFail (decoder: Decoder<'T>) : Decoder<'T option> =
         fun path token ->
             match decoder path token with
@@ -18,3 +19,9 @@ module CustomDecoders =
                 | Some a -> [ key, a ]
                 | None -> [])
         )
+
+    let exactlyOne (decoder: Decoder<'t>) : Decoder<'t> =
+        Decode.list decoder
+        |> Decode.andThen (function
+            | [ item ] -> Decode.succeed item
+            | items -> Decode.fail $"Expected exactly one list entry, but got {List.length items} entries")

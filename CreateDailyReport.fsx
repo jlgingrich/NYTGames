@@ -1,8 +1,10 @@
-#r "NYTGT/bin/Debug/net8.0/NYTGT.dll"
+// Uses NYTGames to create a Markdown report of today's game solutions
+
+#r "NYTGames/bin/Debug/net8.0/NYTGames.dll"
 #r "nuget: Thoth.Json.Net"
 #r "nuget: FSharp.Data"
 
-open NYTGT
+open NYTGames
 
 open System
 open System.Text
@@ -19,8 +21,8 @@ let dateName = today.ToString "MMMM d, yyyy"
 $"# Word Games - %s{dateName}" |> toStringBuilder
 
 try
-    Wordle()
-    |> getCurrentGame
+    Game.Wordle.getCurrentGame ()
+    |> Async.RunSynchronously
     |> Result.assertOk
     |> fun game ->
         let editor = defaultArg game.Info.EditedBy "Nobody?"
@@ -31,14 +33,13 @@ with :? Net.WebException ->
     printfn "Unable to access Wordle"
 
 try
-    Connections()
-    |> getCurrentGame
+    Game.Connections.getCurrentGame ()
+    |> Async.RunSynchronously
     |> Result.assertOk
     |> fun game ->
         let editor = defaultArg game.Info.EditedBy "Nobody?"
 
-        $"\n## Connections\n\n**By:** %s{editor}\n\n**Categories:**\n"
-        |> toStringBuilder
+        $"\n## Connections\n\n**By:** %s{editor}\n" |> toStringBuilder
 
         game.Categories
         |> List.iteri (fun i c ->
@@ -48,8 +49,8 @@ with :? Net.WebException ->
     printfn "Unable to access Connections"
 
 try
-    ConnectionsSports()
-    |> getCurrentGame
+    Game.ConnectionsSports.getCurrentGame ()
+    |> Async.RunSynchronously
     |> Result.assertOk
     |> fun game ->
         let editor = defaultArg game.Info.EditedBy "Nobody?"
@@ -65,8 +66,8 @@ with :? Net.WebException ->
     printfn "Unable to access Connections: Sports Edition"
 
 try
-    Strands()
-    |> getCurrentGame
+    Game.Strands.getCurrentGame ()
+    |> Async.RunSynchronously
     |> Result.assertOk
     |> fun game ->
         let editor = defaultArg game.Info.EditedBy "Nobody?"
@@ -77,8 +78,8 @@ with :? Net.WebException ->
     printfn "Unable to access Spangram"
 
 try
-    LetterBoxed()
-    |> getCurrentGame
+    Game.LetterBoxed.getCurrentGame ()
+    |> Async.RunSynchronously
     |> Result.assertOk
     |> fun game ->
         let solution =
@@ -92,8 +93,8 @@ with :? Net.WebException ->
     printfn "Unable to access Letter Boxed"
 
 try
-    TheMini()
-    |> getCurrentGame
+    Game.TheMini.getCurrentGame ()
+    |> Async.RunSynchronously
     |> Result.assertOk
     |> fun game ->
         "\n## The Mini\n" |> toStringBuilder
@@ -121,8 +122,8 @@ with :? Net.WebException ->
     printfn "Unable to access The Mini"
 
 try
-    TheCrossword()
-    |> getCurrentGame
+    Game.TheCrossword.getCurrentGame ()
+    |> Async.RunSynchronously
     |> Result.assertOk
     |> fun game ->
         "\n## The Crossword\n" |> toStringBuilder
@@ -150,8 +151,8 @@ with :? Net.WebException ->
     printfn "Unable to access The Crossword"
 
 try
-    SpellingBee()
-    |> getCurrentGame
+    Game.SpellingBee.getCurrentGame ()
+    |> Async.RunSynchronously
     |> Result.assertOk
     |> fun game ->
         let editor = defaultArg game.Info.EditedBy "Nobody?"
@@ -166,8 +167,8 @@ with :? Net.WebException ->
     printfn "Unable to access Spelling Bee"
 
 try
-    Suduko()
-    |> getCurrentGame
+    Game.Suduko.getCurrentGame ()
+    |> Async.RunSynchronously
     |> Result.assertOk
     |> fun game ->
         $"\n## Sudoku" |> toStringBuilder
@@ -190,4 +191,5 @@ try
 with :? Net.WebException ->
     printfn "Unable to access Suduko"
 
-File.write $"Reports/%s{dateStamp}.nytgames.md" (s.ToString())
+open System.IO
+File.WriteAllText($"Reports/%s{dateStamp}.nytgames.md", s.ToString())
