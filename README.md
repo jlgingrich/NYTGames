@@ -43,16 +43,15 @@ Solution: 'stare'
 
 ## How to use
 
-Each supported game is represented as a type that implements `IGame` and some combination of `ICurrentGame` and `IHistoryGame`.
+Each supported game is represented as a module under `Game`.
 
-`IGame` provides access to the `parse` method, which parses the raw JSON representation of the game into a structured F# data type. This is typically not reqired.
+All games provide these methods:
 
-`ICurrentGame` provides access to the following methods:
-
+- `parse`: Transforms raw JSON into a strongly-typed F# object.
 - `getCurrentRaw`: Gets a raw unparsed JSON string description of the current puzzle from NYT. Contains unneccessary data that are ignored when parsed.
 - `getCurrentGame`: Gets a description of the puzzle for the current date, as determined by the New York Times website. All games provide this.
 
-`IHistoryGame` provides access to the following methods:
+Only certain games provide these methods, depending on whether the API provides access to archived games:
 
 - `getRaw`: Gets a raw unparsed JSON string description of the specified puzzle from NYT. Contains unneccessary data that are ignored when parsed.
 - `getGame`: Gets a description of the puzzle on a specific date. Not all games currently provide this due to technical limitations.
@@ -62,16 +61,16 @@ Each supported game is represented as a type that implements `IGame` and some co
 - **Connections**
 - **Connections: Sports Edition**
 - **Letter Boxed**
-  - Only `ICurrentGame`
+  - Only current
 - **Spelling Bee**
-  - Only `ICurrentGame`
+  - Only current
 - **Strands**
 - **Sudoko**
-  - Only `ICurrentGame`
+  - Only current
 - **The Crossword**
-  - Only `ICurrentGame`
+  - Only current
 - **The Mini**
-  - Only `ICurrentGame`
+  - Only current
 - **Wordle**
 
 ## Unsupported Games
