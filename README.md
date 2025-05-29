@@ -4,26 +4,30 @@ An F# API for various NYT word games. Comes with a script that generates a Markd
 
 ## Example
 
+[Sample.fsx](Sample.fsx)
+
 ```fsharp
-#load "NYTG.fsx"
-open NYTG
+#r @"NYTGames\bin\Debug\net9.0\NYTGames.dll"
+
+open NYTGames
 
 open System
 
-let printGame (res: Result<Wordle.Game,'a>) =
+let printGame (res: Result<WordleGame, 'a>) =
     let game = res |> Result.assertOk
+
     printfn
         "Wordle %s\nBy %s\nSolution: '%s'\n"
         (game.Info.PrintDate.ToShortDateString())
-        game.Info.Editor
+        (game.Info.EditedBy |> Option.get)
         game.Solution
 
 // Run on 12/31/2024
-Wordle.getCurrentGame ()
-|> printGame
+Game.Wordle.getCurrentGame () |> Async.RunSynchronously |> printGame
 
 DateTime.Parse "12/30/2024"
-|> Wordle.getGame
+|> Game.Wordle.getGame
+|> Async.RunSynchronously
 |> printGame
 ```
 
