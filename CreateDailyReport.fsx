@@ -1,12 +1,13 @@
 // Uses NYTGames to create a Markdown report of today's game solutions
 
-#r "NYTGames/bin/Debug/net9.0/NYTGames.dll"
+#r "NYTGames/bin/Release/net9.0/NYTGames.dll"
 #r "nuget: Thoth.Json.Net"
 #r "nuget: FSharp.Data"
 
 open NYTGames
 
 open System
+open System.IO
 open System.Text
 
 let s = StringBuilder ""
@@ -55,8 +56,7 @@ try
     |> fun game ->
         let editor = defaultArg game.Info.EditedBy "Nobody?"
 
-        $"\n## Connections: Sports Edition\n\n**By:** %s{editor}\n\n**Categories:**\n"
-        |> toStringBuilder
+        $"\n## Connections: Sports Edition\n\n**By:** %s{editor}\n" |> toStringBuilder
 
         game.Categories
         |> List.iteri (fun i c ->
@@ -191,5 +191,4 @@ try
 with :? Net.WebException ->
     printfn "Unable to access Suduko"
 
-open System.IO
-File.WriteAllText($"Reports/%s{dateStamp}.nytgames.md", s.ToString())
+File.WriteAllText($"%s{dateStamp}.nytgames.md", s.ToString())
