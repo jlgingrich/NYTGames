@@ -1,7 +1,7 @@
 {
     "files.readonlyInclude": {
-        "c:\\Users\\GingrichLiam\\Programming\\NYTGameTools\\Reports\\*.md": true,
-        "c:\\Users\\GingrichLiam\\Programming\\NYTGameTools\\Raw\\*.json": true
+        "**/Reports/*.md": true,
+        "**/Raw/*.json": true
     },
     "files.exclude": {
         "**/.git": true,
@@ -9,7 +9,7 @@
         "**/.hg": true,
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
-        "**/__pycache__": true
-    },
-    "hide-files.files": []
+        "**/__pycache__": true,
+        "**/.vscode": true
+    }
 }
