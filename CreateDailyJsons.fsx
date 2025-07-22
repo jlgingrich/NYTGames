@@ -33,7 +33,7 @@ let dumpResult filename object =
         let json = res |> Result.assertOk |> Encode.Auto.toString |> formatJson
 
         return!
-            File.WriteAllTextAsync($"%s{dateStamp}.%s{filename}.json", json)
+            File.WriteAllTextAsync($"Raw/%s{dateStamp}.%s{filename}.json", json)
             |> Async.AwaitTask
     }
 

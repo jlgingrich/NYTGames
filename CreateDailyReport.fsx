@@ -1,6 +1,6 @@
 // Uses NYTGames to create a Markdown report of today's game solutions
 
-#r "NYTGames/bin/Release/net9.0/NYTGames.dll"
+#r "NYTGames/bin/Debug/net9.0/NYTGames.dll"
 #r "nuget: Thoth.Json.Net"
 #r "nuget: FSharp.Data"
 
@@ -191,4 +191,4 @@ try
 with :? Net.WebException ->
     printfn "Unable to access Suduko"
 
-File.WriteAllText($"%s{dateStamp}.nytgames.md", s.ToString())
+File.WriteAllText($"Reports/%s{dateStamp}.nytgames.md", s.ToString())
