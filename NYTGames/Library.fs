@@ -130,21 +130,24 @@ module Game =
 
         let getRaw date =
             let gqlQuery =
-                """query GetPuzzleById($puzzleId: String!) {
-                                    getPuzzleById(puzzleId: $puzzleId) {
-                                        categories {
-                                            title
-                                            cards {
-                                                content
-                                                position
-                                                img
-                                            }
-                                        }
-                                    printDate
-                                    id
-                                    editor
-                                }
-                            }"""
+                """
+                query GetPuzzleById($puzzleId: String!) {
+                    getPuzzleById(puzzleId: $puzzleId) {
+                    categories {
+                        title
+                        cards {
+                        content
+                        position
+                        img
+                        }
+                    }
+                    printDate: print_date
+                    id
+                    hint_url
+                    editor
+                    difficulty
+                    }
+                }"""
 
             Http.AsyncRequestString(
                 "https://api.theathletic.com/graphql",
