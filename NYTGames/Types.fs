@@ -1,6 +1,7 @@
 namespace NYTGames
 
 open System
+open Thoth.Json.Net
 
 type PublicationInformation = {
     Id: int
@@ -75,7 +76,7 @@ type TheCrosswordGame = {
 }
 
 [<RequireQualifiedAccess>]
-type SudukoDifficulty =
+type Difficulty =
     | Easy
     | Medium
     | Hard
@@ -91,4 +92,43 @@ type SudukoGame = {
     Info: PublicationInformation
     Puzzle: (int option) array array
     Solution: int array array
+}
+
+type PipsRegionType =
+    | Equals
+    | Unequal
+    | Sum of Target: int
+    | Less of Target: int
+    | Greater of Target: int
+    | Empty
+
+type PipsRegion = {
+    ``type``: PipsRegionType
+    Indices: array<int * int>
+} with
+
+    static member decoder: Decoder<PipsRegion> =
+        Decode.object (fun get ->
+            let target = get.Optional.Field "target" Decode.int
+            let typeField = get.Required.Field "type" Decode.string
+
+            let typeObject =
+                match typeField, target with
+                | "equals", None -> Equals
+                | "unequal", None -> Unequal
+                | "sum", Some t -> Sum t
+                | "less", Some t -> Less t
+                | "greater", Some t -> Greater t
+                | "empty", None -> Empty
+                | er, t -> failwithf "Unable to parse region and target: '%s', '%A'" er t
+
+            {
+                ``type`` = typeObject
+                Indices = get.Required.Field "indices" (Decode.array (Decode.tuple2 Decode.int Decode.int))
+            })
+
+type PipsGame = {
+    Info: PublicationInformation
+    Dominoes: List<int * int>
+    Regions: List<PipsRegion>
 }

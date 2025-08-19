@@ -48,6 +48,8 @@ let dumpResult filename object =
     Game.TheCrossword.getCurrentGame () |> dumpResult "the-crossword"
     Game.SpellingBee.getCurrentGame () |> dumpResult "spelling-bee"
     Game.Suduko.getCurrentGame () |> dumpResult "suduko"
+    Game.Pips.getCurrentGame () |> dumpResult "pips"
+
 ]
 |> Async.Parallel
 |> Async.RunSynchronously

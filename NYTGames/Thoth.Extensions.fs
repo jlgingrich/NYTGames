@@ -25,3 +25,5 @@ module Decode =
         |> Decode.andThen (function
             | [ item ] -> Decode.succeed item
             | items -> Decode.fail $"Expected exactly one list entry, but got {List.length items} entries")
+
+    let intPair: Decoder<int * int> = Decode.tuple2 Decode.int Decode.int

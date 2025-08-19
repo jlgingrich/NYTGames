@@ -335,6 +335,54 @@ module Game =
 
         let getCurrentGame () = getCurrentRaw () |> Async.map parse
 
+    module Pips =
+        let decoder: Decoder<PipsGame> =
+            Decode.object (fun get -> {
+                Info = {
+                    Id = get.Required.Field "id" Decode.int
+                    PrintDate = System.DateTime.MinValue // Overwritten by shared data
+                    EditedBy = None // Overwritten by shared data
+                    ConstructedBy = get.Required.Field "constructors" Decode.string |> Some
+                }
+                Dominoes = get.Required.Field "dominoes" (Decode.list Decode.intPair)
+                Regions = get.Required.Field "regions" (Decode.list PipsRegion.decoder)
+            })
+
+        let decodeData: Decoder<_> =
+            Decode.keyValueOptions (Decode.ignoreFail decoder)
+            |> Decode.andThen (fun kvs -> kvs |> List.map (fun (k, v) -> Difficulty.parse k, v) |> Decode.succeed)
+            |> Decode.map Map
+
+        let decoderSharedInfo: Decoder<PublicationInformation> =
+            Decode.object (fun get -> {
+                Id = 0
+                PrintDate = get.Required.Field "printDate" Decode.datetimeLocal
+                EditedBy = get.Required.Field "editor" Decode.string |> Some
+                ConstructedBy = None
+            })
+
+        let parse arg =
+            let info = Decode.fromString decodeData arg
+            let sharedInfo = Decode.fromString decoderSharedInfo arg |> Result.assertOk
+
+            info
+            |> Result.map (
+                Map.map (fun _ value -> {
+                    value with
+                        Info.EditedBy = sharedInfo.EditedBy
+                        Info.PrintDate = sharedInfo.PrintDate
+                })
+            )
+
+        let getRaw date =
+            Helpers.urlForDate "pips" 1u date |> Helpers.getRequest
+
+        let getGame date = getRaw date |> Async.map parse
+
+        let getCurrentRaw () = getRaw DateTime.Now
+
+        let getCurrentGame () = getCurrentRaw () |> Async.map parse
+
     module TheCrossword =
         let decoder: Decoder<TheCrosswordGame> =
             Decode.object (fun get ->
@@ -417,9 +465,9 @@ module Game =
                         (Decode.array Decode.int |> Decode.map (Array.chunkBySize 9))
             })
 
-        let decodeData: Decoder<Map<SudukoDifficulty, SudukoGame>> =
+        let decodeData: Decoder<Map<Difficulty, SudukoGame>> =
             Decode.keyValueOptions (Decode.ignoreFail decoder)
-            |> Decode.andThen (fun kvs -> kvs |> List.map (fun (k, v) -> SudukoDifficulty.parse k, v) |> Decode.succeed)
+            |> Decode.andThen (fun kvs -> kvs |> List.map (fun (k, v) -> Difficulty.parse k, v) |> Decode.succeed)
             |> Decode.map Map
 
         let parse arg = Decode.fromString decodeData arg
