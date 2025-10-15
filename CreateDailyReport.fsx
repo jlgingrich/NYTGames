@@ -45,7 +45,8 @@ try
         game.Categories
         |> List.iteri (fun i c ->
             $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
-            c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
+            c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder)
+        )
 with :? Net.WebException ->
     printfn "Unable to access Connections"
 
@@ -61,7 +62,8 @@ try
         game.Categories
         |> List.iteri (fun i c ->
             $"%d{i + 1}. **%s{c.Title}**" |> toStringBuilder
-            c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder))
+            c.Cards |> List.iter (fun card -> $"    - `%s{card}`" |> toStringBuilder)
+        )
 with :? Net.WebException ->
     printfn "Unable to access Connections: Sports Edition"
 
@@ -112,10 +114,13 @@ try
         game.Solution
         |> Array.map (fun row ->
             row
-            |> Array.map (function
+            |> Array.map (
+                function
                 | Some c -> c
-                | None -> " ")
-            |> String.concat " ")
+                | None -> " "
+            )
+            |> String.concat " "
+        )
         |> String.concat "\n"
         |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
 with :? Net.WebException ->
@@ -141,10 +146,13 @@ try
         game.Solution
         |> Array.map (fun row ->
             row
-            |> Array.map (function
+            |> Array.map (
+                function
                 | Some c -> c
-                | None -> " ")
-            |> String.concat " ")
+                | None -> " "
+            )
+            |> String.concat " "
+        )
         |> String.concat "\n"
         |> fun s -> toStringBuilder $"```text\n%s{s}\n```"
 with :? Net.WebException ->
@@ -183,7 +191,8 @@ try
                 |> Array.map string
                 |> Array.chunkBySize 3
                 |> Array.map (String.concat " ")
-                |> String.concat "   ")
+                |> String.concat "   "
+            )
             |> Array.chunkBySize 3
             |> Array.map (String.concat "\n")
             |> String.concat "\n\n"
